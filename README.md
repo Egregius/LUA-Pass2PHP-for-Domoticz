@@ -22,7 +22,9 @@ otherdevices_lastupdate = $t[]<br>
 After decoding everything there's a check to see if there's a file in the pass2php folder that has exactly the same name as the changed device. So if you want to do something with a device called 'PIRhall' you need to create a file pass2php/PIRhall.php. Keep in mind that everything is case sensitive.<br>
 Having everything in arrays means that all device states are available like $s['PIRHall']. The IDX of a device is available in $i['kitchenlight'] and the lastupdate time in $t['PIRhall']. The lastupdate time is provided as a formatted string. We need to convert to unix timestamp in order to do calculations with it: strtotime($t['PIRhall'])<br>
 As there is a constant 'time' defined now it's easy to do calculations:<br>
-if($s['PIRhall']=='Off'&&strtotime($t['PIRhall']<time-120))sw($i['lighthall'],'Off');<br>
+```php
+if($s['PIRhall']=='Off'&&strtotime($t['PIRhall']<time-120))sw($i['lighthall'],'Off');
+```
 
 
 
