@@ -1,3 +1,5 @@
+Readme under construction...
+
 # LUA-Pass2PHP-for-Domoticz
 Advanced event system for Domoticz
 
@@ -25,7 +27,7 @@ As there is a constant 'time' defined now it's easy to do calculations:<br>
 ```php
 if($s['PIRhall']=='Off'&&strtotime($t['PIRhall']<time-120))sw($i['lighthall'],'Off');
 ```
-
+See the [pass2php folder](https://github.com/Egregius/LUA-Pass2PHP-for-Domoticz/tree/master/secure/pass2php) for many examples.
 
 
 # Functions
