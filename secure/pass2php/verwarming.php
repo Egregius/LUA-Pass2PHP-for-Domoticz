@@ -1,0 +1,33 @@
+<?php
+if(cget('time-verwarming')<time-10){cset('time-verwarming',time);$buienradar=$weer['buien'];$buiten_temp=$weer['buiten_temp'];$wind=$weer['wind'];
+	if($s['weg']=='On'){if($s['heating']!='Off'&&strtotime($t['heating'])<time-3598){sw($i['heating'],'Off','heating');$s['heating']='Off';}}
+	else{if($s['heating']!='On'){sw($i['heating'],'On','heating');$s['heating']='On';}}
+	$Setkamer=6;$setpointkamer=cget('setpointkamer');if($setpointkamer!=0&&strtotime($t['kamer_set'])<time-3598){cset('setpointkamer',0);$setpointkamer=0;}if($setpointkamer!=2){if($buiten_temp<14&&$s['raamkamer']=='Closed'&&$s['heating']=='On'&&(strtotime($t['raamkamer'])<time-7198||time>strtotime('21:00'))){$Setkamer=12.0;if(time<strtotime('5:00')||time>strtotime('21:00'))$Setkamer=16;}if($s['kamer_set']!=$Setkamer){ud($i['kamer_set'],0,$Setkamer,'Rkamer_set');$s['kamer_set']=$Setkamer;}}
+	$Settobi=6;$setpointtobi=cget('setpointtobi');if($setpointtobi!=0&&strtotime($t['tobi_set'])<time-3598){cset('setpointtobi',0);$setpointtobi=0;}if($setpointtobi!=2){if($buiten_temp<14&&$s['raamtobi']=='Closed'&&$s['heating']=='On'&&(strtotime($t['raamtobi'])<time-7198||time>strtotime('21:00'))){$Settobi=12.0;if(date('W')%2==1){if(date('N')==3){if(time>strtotime('21:00'))$Settobi=16;}elseif(date('N')==4){if(time<strtotime('5:00')||time>strtotime('21:00'))$Settobi=16;}elseif(date('N')==5){if(time<strtotime('5:00'))$Settobi=16;}}else{if(date('N')==3){if(time>strtotime('21:00'))$Settobi=16;}elseif(in_array(date('N'),array(4,5,6))){if(time<strtotime('5:00')||time>strtotime('21:00'))$Settobi=16;}elseif(date('N')==7){if(time<strtotime('5:00'))$Settobi=16;}}}if(isset($s['tobi_set'])&&$s['tobi_set']!=$Settobi){ud($i['tobi_set'],0,$Settobi,'Rtobi_set');$s['tobi_set']=$Settobi;}}
+	$Setalex=6;$setpointalex=cget('setpointalex');if($setpointalex!=0&&strtotime($t['alex_set'])<time-28795){cset('setpointalex',0);$setpointalex=0;}if($setpointalex!=2){if($buiten_temp<16&&$s['raamalex']=='Closed'&&$s['heating']=='On'&&(strtotime($t['raamalex'])<time-1800||time>strtotime('19:00'))){$Setalex=12;if(time<strtotime('5:00')||time>strtotime('19:00'))$Setalex=16.0;}if($s['alex_set']!=$Setalex){ud($i['alex_set'],0,$Setalex,'Ralex_set');$s['alex_set']=$Setalex;}}
+	$Setliving=14;$setpointliving=cget('setpointliving');if($setpointliving!=0&&strtotime($t['living_set'])<time-10795){cset('setpointliving',0);$setpointliving=0;}if($setpointliving!=2){if($buiten_temp<20&&$s['heating']=='On'&&$s['raamliving']=='Closed'){$Setliving=17;if(time>=strtotime('5:00')&&time<strtotime('8:15'))$s['slapen']=='On'?$Setliving=17.0:$Setliving=20.0;elseif(time>=strtotime('8:15')&&time<strtotime('19:55'))$s['slapen']=='On'?$Setliving=19.0:$Setliving=20.5;}if($s['living_set']!=$Setliving){ud($i['living_set'],0,$Setliving,'Rliving_set');$s['living_set']=$Setliving;}}
+	$kamers=array('living','tobi','alex','kamer');$bigdif=100;$timebrander=time-strtotime($t['brander']);
+	foreach($kamers as $kamer){${'dif'.$kamer}=number_format($s[$kamer.'_temp']-$s[$kamer.'_set'],1);if(${'dif'.$kamer}>9.9)${'dif'.$kamer}=9.9;if(${'dif'.$kamer}<$bigdif&&$kamer!='kamer')$bigdif=${'dif'.$kamer};${'Set'.$kamer}=$s[$kamer.'_set'];}
+	foreach($kamers as $kamer){if(${'dif'.$kamer}<=number_format(($bigdif+ 0.2),1)&&${'dif'.$kamer}<2)${'RSet'.$kamer}=setradiator($kamer,${'dif'.$kamer},true,$s[$kamer.'_set']);else ${'RSet'.$kamer}=setradiator($kamer,${'dif'.$kamer},false,$s[$kamer.'_set']);}
+	if(round($s['kamerZ'],1)!=round($RSetkamer,1)){lg('Danfoss KamerZ was '.$s['kamerZ'].',nieuw='.$RSetkamer);ud($i['kamerZ'],0,$RSetkamer,'RkamerZ');}
+	if(round($s['tobiZ'],1)!=round($RSettobi,1)){lg('Danfoss tobiZ was '.$s['tobiZ'].',nieuw='.$RSettobi);ud($i['tobiZ'],0,$RSettobi,'RtobiZ');}
+	if(round($s['alexZ'],1)!=round($RSetalex,1)){lg('Danfoss alexZ was '.$s['alexZ'].',nieuw='.$RSetalex);ud($i['alexZ'],0,$RSetalex,'RalexZ');}
+	if(round($s['livingZ'],1)!=round($RSetliving,1)){lg('Danfoss livingZ was '.$s['livingZ'].',nieuw='.$RSetliving);ud($i['livingZ'], 0,$RSetliving,'RlivingZ');}
+	if(round($s['livingZZ'],1)!=round($RSetliving,1)){lg('Danfoss livingZZ was '.$s['livingZZ'].',nieuw='.$RSetliving);ud($i['livingZZ'],0,$RSetliving,'RlivingZZ');}
+	if(round($s['livingZE'],1)!=round($RSetliving,1)){lg('Danfoss livingZE was '.$s['kamerZ'].',nieuw='.$RSetliving);ud($i['livingZE'],0,$RSetliving,'RlivingZE');}
+	if($bigdif<=-0.6&&$s['brander']=="Off"&&$timebrander>60)sw($i['brander'],'On', 'brander1 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
+	elseif($bigdif<=-0.5&&$s['brander']=="Off"&&$timebrander>120)sw($i['brander'],'On', 'brander2 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
+	elseif($bigdif<=-0.4&&$s['brander']=="Off"&&$timebrander>180)sw($i['brander'],'On', 'brander3 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
+	elseif($bigdif<=-0.3&&$s['brander']=="Off"&&$timebrander>300)sw($i['brander'],'On', 'brander4 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
+	elseif($bigdif<=-0.2&&$s['brander']=="Off"&&$timebrander>450)sw($i['brander'],'On', 'brander5 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
+	elseif($bigdif<=-0.1&&$s['brander']=="Off"&&$timebrander>600)sw($i['brander'],'On', 'brander6 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
+	elseif($bigdif<=0	&&$s['brander']=="Off"&&$timebrander>2400)sw($i['brander'],'On', 'brander7 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
+	elseif($bigdif>0	&&$s['brander']=="On" &&$timebrander>30)sw($i['brander'],'Off','brander8 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
+	elseif($bigdif>=0	&&$s['brander']=="On"&&$timebrander>120)sw($i['brander'],'Off','brander9 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
+	elseif($bigdif>=-0.1&&$s['brander']=="On"&&$timebrander>180)sw($i['brander'],'Off','brander10 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
+	elseif($bigdif>=-0.2&&$s['brander']=="On"&&$timebrander>240)sw($i['brander'],'Off','brander11 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
+	elseif($bigdif>=-0.3&&$s['brander']=="On"&&$timebrander>300)sw($i['brander'],'Off','brander12 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
+	elseif($bigdif>=-0.4&&$s['brander']=="On"&&$timebrander>360)sw($i['brander'],'Off','brander13 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
+	elseif($bigdif>=-0.5&&$s['brander']=="On"&&$timebrander>420)sw($i['brander'],'Off','brander14 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
+	elseif($bigdif>=-0.6&&$s['brander']=="On"&&$timebrander>900)sw($i['brander'],'Off','brander15 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
+}

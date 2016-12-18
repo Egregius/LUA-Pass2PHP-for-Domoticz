@@ -1,0 +1,10 @@
+<?php
+$denon=json_decode(json_encode(simplexml_load_string(file_get_contents(denon.'goform/formMainZone_MainZoneXml.xml?_='.time,false,$ctx))),TRUE);
+if($denon){
+	$denon['MasterVolume']['value']=='--'
+		?$setvalue=-55
+		:$setvalue=$denon['MasterVolume']['value'];
+	$setvalue=$setvalue+3;if($setvalue>-10)$setvalue=-10;if($setvalue<-80)$setvalue=-80;$volume=80+$setvalue;
+	usleep(100000);
+	file_get_contents(denon.'MainZone/index.put.asp?cmd0=PutMasterVolumeSet/'.$setvalue.'.0',false,$ctx);
+}
