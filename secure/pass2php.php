@@ -32,16 +32,16 @@ function alles($action,$uit=0){global $s,$i,$t;if($action=='On'){$items=array('e
 function SD($naam){global $i;$msg='Rook gedecteerd bij '.$naam.'!';telegram($msg,false,'Kirby');ios($msg);resetsecurity($i[$naam],$naam);}
 //GLOBAL FUNCTIONS
 function sw($idx,$action='',$info=''){
-	lg('SWITCH '.$action.' '.$info);
+	if(logging==true)lg('SWITCH '.$action.' '.$info);
 	if(empty($action))curl(domoticz.'json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd=Toggle');
 	else curl(domoticz.'json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd='.$action);
 }
 function sl($idx,$level,$info=''){
-	lg('SETLEVEL '.$level.' '.$info);
+	if(logging==true)lg('SETLEVEL '.$level.' '.$info);
 	curl(domoticz.'json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd=Set%20Level&level='.$level);
 }
 function ud($idx,$nvalue,$svalue,$info=""){
-	if(!in_array($idx, array(395,532,534)))lg("UPDATE ".$nvalue." ".$svalue." ".$info);
+	if(logging==true)if(!in_array($idx, array(395,532,534)))lg("UPDATE ".$nvalue." ".$svalue." ".$info);
 	curl(domoticz.'json.htm?type=command&param=udevice&idx='.$idx.'&nvalue='.$nvalue.'&svalue='.$svalue);
 }
 function setradiator($name,$dif,$koudst=false,$set){
