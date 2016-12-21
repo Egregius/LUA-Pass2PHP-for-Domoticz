@@ -120,7 +120,7 @@ if(cget('cron120')<time-119){
 
 if(cget('cron180')<time-179){
 	cset('cron180',time);
-	$wu=json_decode(curl('http://api.wunderground.com/api/c46771fe9413775e/conditions/q/BX/Beitem.json'),true);
+	$wu=json_decode(curl('http://api.wunderground.com/api/c12345e9413775e/conditions/q/BX/Beitem.json'),true);
 	if(isset($wu['current_observation'])){
 		$lastobservation=cget('wu-observation');
 		if(isset($wu['current_observation']['estimated']['estimated']))goto exitwunderground;
