@@ -1,2 +1,11 @@
 <?php
-if($s['pirliving']=='On'){if($s['denon']=='Off'&&$s['weg']=='Off'&&$s['slapen']=='Off'){if($s['zon']<100){if($s['wasbak']=='Off')sw($i['wasbak'],'On','wasbak');if($s['bureel']=='Off')sw($i['bureel'],'On','bureel');}miniliving1l();}alarm('living');}
+if($s['pirliving']=='On'){
+	if($s['denon']=='Off'&&$s['weg']=='Off'&&$s['slapen']=='Off'){
+		if(cget('zon')<100){
+			if($s['wasbak']=='Off')sw($i['wasbak'],'On','wasbak');
+			if($s['bureel']=='Off')sw($i['bureel'],'On','bureel');
+		}
+		include('pass2php/miniliving1l.php');
+	}
+	alarm('living');
+}
