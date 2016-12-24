@@ -1,8 +1,9 @@
 <?php
-if($s['denon']=='Off')sw($i['denon'],'On','Denon');
-if($s['tv']=='Off')sw($i['tv'],'On','TV');
-if($s['zon']<100&&$s['tvled']=='Off')sw($i['tvled'],'On','tvled');
-elseif($s['tv']=='On'&&$s['tvled']=='Off')sw($i['tvled'],'On','tvled');
-file_get_contents(denon.'MainZone/index.put.asp?cmd0=PutZone_InputFunction/SAT/CBL',false,$ctx);
+if($s['denon']=='Off')sw(apcu_fetch('idenon'),'On','Denon');
+if($s['tv']=='Off')sw(apcu_fetch('itv'),'On','TV');
+if(apcu_fetch('zon')<100&&$s['tvled']=='Off')sw(apcu_fetch('itvled'),'On','tvled');
+elseif($s['tv']=='On'&&$s['tvled']=='Off')sw(apcu_fetch('itvled'),'On','tvled');
+$ctx=stream_context_create(array('http'=>array('timeout'=>3)));
+file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutZone_InputFunction/SAT/CBL',false,$ctx);
 usleep(800000);
-file_get_contents(denon.'MainZone/index.put.asp?cmd0=PutMasterVolumeSet/-42.0',false,$ctx);
+file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutMasterVolumeSet/-42.0',false,$ctx);

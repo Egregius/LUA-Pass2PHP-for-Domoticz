@@ -1,2 +1,2 @@
 <?php
-if(strtotime($t['werkblad'])<time-5&&strtotime($t['werkblad2'])<time-5)RefreshZwave(7);
+if(apcu_fetch('twerkblad')<time-5&&apcu_fetch('twerkblad2')<time-5)RefreshZwave(7);

@@ -1,2 +1,2 @@
 <?php
-if(strtotime($t['inkom'])<time-5&&strtotime($t['voordeur'])<time-5)RefreshZwave(8);
+if(apcu_fetch('tinkom')<time-5&&apcu_fetch('tvoordeur')<time-5)RefreshZwave(8);

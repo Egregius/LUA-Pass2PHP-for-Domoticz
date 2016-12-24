@@ -1,6 +1,6 @@
 <?php
 if($s['sirene']=='On'){
-	sw($i['deurbel'],'On','Deurbel sirene');
+	sw(apcu_fetch('ideurbel'),'On','Deurbel sirene');
 	sleep(2);
-	sw($i['sirene'],'Off','sirene');
+	sw(apcu_fetch('isirene'),'Off','sirene');
 }

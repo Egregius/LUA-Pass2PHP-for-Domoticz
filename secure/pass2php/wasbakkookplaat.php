@@ -1,2 +1,2 @@
 <?php
-if(strtotime($t['wasbak'])<time-5&&strtotime($t['kookplaat'])<time-5)RefreshZwave(6);
+if(apcu_fetch('twasbak')<time-5&&apcu_fetch('tkookplaat')<time-5)RefreshZwave(6);

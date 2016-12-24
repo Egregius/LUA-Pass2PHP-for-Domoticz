@@ -1,2 +1,2 @@
 <?php
-sw($i['bureel'],'Toggle','Bureel');
+sw(apcu_fetch('ibureel'),'Toggle','Bureel');

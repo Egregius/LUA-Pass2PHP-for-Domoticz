@@ -1,3 +1,8 @@
 <?php
-if($s['living_temp']>$weer['living_temp']&&$s['living_temp']>$s[str_replace("_temp","_set",'living_temp')]&&strtotime($t['brander'])<time-600)
-	sw($i['brander'],'Off','Brander door '.'living_temp'.' prev='.$weer['living_temp'].', new='.$s['living_temp']);
+$room='living';
+$prev=apcu_fetch($room.'_temp');
+if($s[$room.'_temp']!=$prev)apcu_store($room.'_temp',$s[$room.'_temp']);
+if($s[$room.'_temp']>$prev&&$s[$room.'_temp']>$s[$room.'_set']&&apcu_fetch('tbrander')<time-600)
+	sw(apcu_fetch('ibrander'),'Off','Brander door '.$room.' prev='.$prev.', new='.$s['alex_temp']);
+elseif($s[$room.'_temp']<$prev&&$s[$room.'_temp']<$s[$room.'_set']&&apcu_fetch('tbrander')<time-600)
+	sw(apcu_fetch('ibrander'),'Off','Brander door '.$room.' prev='.$prev.', new='.$s['alex_temp']);

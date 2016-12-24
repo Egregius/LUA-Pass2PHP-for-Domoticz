@@ -2,4 +2,4 @@
 $items=array('eettafel','zithoek','garage','inkom','hall','keuken','werkblad','wasbak','kookplaat');
 foreach($items as $item)
 	if($s[$item]!='Off')
-		sw($i[$item],'Off',$item);
+		sw(apcu_fetch('i'.$item),'Off',$item);

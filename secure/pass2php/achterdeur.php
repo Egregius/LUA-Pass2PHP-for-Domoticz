@@ -1,9 +1,8 @@
 <?php
 if($s['achterdeur']!="Open"){
 	if(($s['weg']=='On'||$s['slapen']=='On')&&$s['meldingen']=='On'){
-		sw($i['sirene'],'On');
-		$msg='Achterdeur open om '.$t['achterdeur'];
-		telegram($msg,false);
-		ios($msg);
+		sw(apcu_fetch('isirene'),'On');
+		$msg='Achterdeur open om '.apcu_fetch('tachterdeur');
+		telegram($msg,false,3);
 	}
 }

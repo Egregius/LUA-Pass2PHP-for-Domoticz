@@ -1,2 +1,2 @@
 <?php
-sl($i['alex'],2,'Alex');
+sl(apcu_fetch('ialex'),2,'Alex');

@@ -1,5 +1,4 @@
 <?php
-if($s['slapen']=='Off')sw($i['slapen'],'On','slapen');
-alles('Slapen');
-if($s['lichten_auto']=='Off')sw($i['lichten_auto'],'On','lichten auto aan');
-/*if($s['luifel']!='Open')sw($i['luifel'],'Off','zonneluifel dicht');*/
+if($s['slapen']=='Off')sw(apcu_fetch('islapen'),'On','slapen');
+if($s['lichten_auto']=='Off')sw(apcu_fetch('ilichten_auto'),'On','lichten auto aan');
+/*if($s['luifel']!='Open')sw(apcu_fetch('iluifel'),'Off','zonneluifel dicht');*/

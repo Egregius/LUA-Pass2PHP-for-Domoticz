@@ -1,4 +1,4 @@
 <?php
 $s['remoteweg']=='On'
-	?sw($i['weg'],'On')
-	:sw($i['weg'],'Off');
+	?sw(apcu_fetch('iweg'),'On')
+	:sw(apcu_fetch('iweg'),'Off');

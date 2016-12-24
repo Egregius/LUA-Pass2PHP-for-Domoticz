@@ -1,9 +1,11 @@
 <?php
-if($s['denon']=='Off')sw($i['denon'],'On','Denon');
-if($s['tv']=='On')sw($i['tv'],'Off','TV');
-if($s['zon']>0){
-	if($s['kristal']=='On')sw($i['kristal'],'Off','Kristal');
-	if($s['tvled']=='On')sw($i['tvled'],'Off','tvled');
+if($s['denon']=='Off')sw(apcu_fetch('idenon'),'On','Denon');
+if($s['tv']=='On')sw(apcu_fetch('itv'),'Off','TV');
+if(apcu_fetch('zon')>10){
+	if($s['kristal']=='On')sw(apcu_fetch('ikristal'),'Off','Kristal');
+	if($s['tvled']=='On')sw(apcu_fetch('itvled'),'Off','tvled');
 }
-file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutMasterVolumeSet/-50.0',false,$ctx);usleep(800000);
+$ctx=stream_context_create(array('http'=>array('timeout'=>3)));
+file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutMasterVolumeSet/-50.0',false,$ctx);
+usleep(800000);
 file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutZone_InputFunction/TUNER',false,$ctx);
