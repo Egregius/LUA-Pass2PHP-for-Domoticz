@@ -1,4 +1,4 @@
 <?php
-$s['remoteweg']=='On'
+$status=='On'
 	?sw(apcu_fetch('iweg'),'On')
 	:sw(apcu_fetch('iweg'),'Off');

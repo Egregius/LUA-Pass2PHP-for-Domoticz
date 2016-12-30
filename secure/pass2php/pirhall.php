@@ -1,17 +1,15 @@
 <?php
-if($s['pirhall']=='On'){
-	if($s['slapen']=='Off'&&$s['hall']=='Off'&&(time<strtotime('8:00')||apcu_fetch('zon')<100)){
+if($status=='On'){
+	if(apcu_fetch('sslapen')=='Off'&&apcu_fetch('shall')=='Off'&&(time<strtotime('8:00')||apcu_fetch('zon')<100)){
 		sw(apcu_fetch('ihall'),'On','hal');
 		apcu_store('thall',time);
 	}
-	if($s['inkom']=='Off'&&(time<strtotime('8:00')||apcu_fetch('zon')<100)){
+	if(apcu_fetch('sinkom')=='Off'&&(time<strtotime('8:00')||apcu_fetch('zon')<100)){
 		sw(apcu_fetch('iinkom'),'On','inkom');
 		apcu_store('tinkom',time);
 	}
-	if(($s['weg']=='On'||$s['slapen']=='On')&&$s['meldingen']=='On'&&apcu_fetch('tweg')<time-178&&apcu_fetch('tslapen')<time-178){
+	if(apcu_fetch('sweg')=='On'&&apcu_fetch('smeldingen')=='On'&&apcu_fetch('tweg')<time-178&&apcu_fetch('tslapen')<time-178){
 		sw(apcu_fetch('isirene'),'On');
-		$msg='Beweging hall om '.time;
-		telegram($msg,false,3);
+		telegram('Beweging hall om '.strftime("%k:%M:%S",time),false,3);
 	}
 }
-apcu_store('spirhall',$s['pirhall']);

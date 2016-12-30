@@ -1,13 +1,11 @@
 <?php
-if($s['pirkeuken']=="On"){
-	if($s['keuken']=='Off'&&$s['wasbak']=='Off'&&$s['werkblad']=='Off'&&$s['kookplaat']=='Off'&&apcu_fetch('zon')<500){
+if($status=="On"){
+	if(apcu_fetch('skeuken')=='Off'&&apcu_fetch('swasbak')=='Off'&&apcu_fetch('swerkblad')=='Off'&&apcu_fetch('skookplaat')=='Off'&&apcu_fetch('zon')<500){
 		sw(apcu_fetch('iwasbak'),'On','wasbak');
 		apcu_store('twasbak',time);
 	}
-	if(($s['weg']=='On'||$s['slapen']=='On')&&$s['meldingen']=='On'&&apcu_fetch('tweg')<time-178&&apcu_fetch('tslapen')<time-178){
+	if((apcu_fetch('sweg')=='On'||apcu_fetch('sslapen')=='On')&&apcu_fetch('smeldingen')=='On'&&apcu_fetch('tweg')<time-178&&apcu_fetch('tslapen')<time-178){
 		sw(apcu_fetch('isirene'),'On');
-		$msg='Beweging keuken om '.time;
-		telegram($msg,false,3);
+		telegram('Beweging keuken om '.strftime("%k:%M:%S",time),false,3);
 	}
 }
-apcu_store('spirkeuken',$s['pirkeuken']);

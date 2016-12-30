@@ -1,8 +1,7 @@
 <?php
-if($s['raamliving']=='Open'){
-	if(($s['weg']=='On'||$s['slapen']=='On')&&$s['meldingen']=='On'&&apcu_fetch('tweg')<time-178&&apcu_fetch('tslapen')<time-178){
+if($status=='Open'){
+	if((apcu_fetch('sweg')=='On'||apcu_fetch('sslapen')=='On')&&apcu_fetch('smeldingen')=='On'&&apcu_fetch('tweg')<time-178&&apcu_fetch('tslapen')<time-178){
 		sw(apcu_fetch('isirene'),'On');
-		$msg='Raam living open om '.time;
-		telegram($msg,false,3);
+		telegram('Raam living open om '.strftime("%k:%M:%S",time),false,3);
 	}
 }

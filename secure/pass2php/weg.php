@@ -1,10 +1,10 @@
 <?php
-if($s['weg']=="On"){
-	if($s['achterdeur']!='Open'){
+if($status=="On"){
+	if(apcu_fetch('sachterdeur')!='Open'){
 		sw(apcu_fetch('ideurbel'),'On');
 		telegram('Opgelet: Achterdeur open!',false,2);
 	}
-	if($s['raamliving']!='Closed'){
+	if(apcu_fetch('sraamliving')!='Closed'){
 		sw(apcu_fetch('ideurbel'),'On');
 		telegram('Opgelet: Raam Living open!',false,2);
 	}
@@ -17,5 +17,5 @@ if($s['weg']=="On"){
 	double(apcu_fetch('ibadkamervuur'),'Off');
 }
 else{
-	if($s['poortrf']=='Off')sw(apcu_fetch('ipoortrf'),'On','Poort RF');
+	if(apcu_fetch('spoortrf')=='Off')sw(apcu_fetch('ipoortrf'),'On','Poort RF');
 }
