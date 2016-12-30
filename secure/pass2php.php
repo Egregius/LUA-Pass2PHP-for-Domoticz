@@ -1,25 +1,33 @@
-<?php $start=microtime(true);error_reporting(E_ALL);ini_set("display_errors","on");date_default_timezone_set('Europe/Brussels');
+<?php error_reporting(E_ALL);ini_set("display_errors","on");date_default_timezone_set('Europe/Brussels');
 define('time',$_SERVER['REQUEST_TIME']);$actions=0;
-$c=ex($_REQUEST['c']);$s=ex($_REQUEST['s']);
-foreach($c as $device=>$status)
-	if(@include '/volume1/web/secure/pass2php/'.$device.'.php'){apcu_store('t'.$device,time);$dev=$device;}
-$split=microtime(true);
+$c=ex($_REQUEST['c']);
+foreach($c as $device=>$status){
+	if(@include '/volume1/web/secure/pass2php/'.$device.'.php'){
+		//Filter the 'set level' stuff away for dimmers
+		if(in_array($device,array('eettafel','zithoek','kamer','tobi','alex'))){
+			if($status=='Off')apcu_store('s'.$device,'Off');
+			else apcu_store('s'.$device,filter_var($status,FILTER_SANITIZE_NUMBER_INT));
+		}else apcu_store('s'.$device,$status);
+		apcu_store('t'.$device,time);
+		$dev=$device;
+	}
+}
 if(!isset($dev))die();
-include '/volume1/web/secure/pass2php/__CRON.php';
+include '/volume1/web/secure/__CRON.php';
 function sw($idx,$action='',$info=''){
-	//lg('SWITCH '.$idx.' '.$action.' '.$info);
+	lg('SWITCH '.$idx.' '.$action.' '.$info);
 	if(empty($action))file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd=Toggle');
 	else file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd='.$action);
 	global $actions;$actions=$actions+1;
 }
-function double($idx,$action,$comment='',$wait=1500000){
+function double($idx,$action,$comment='',$wait=2000000){
 	sw($idx,$action,$comment);
 	usleep($wait);
 	sw($idx,$action,$comment.' repeat',0);
 	global $actions;$actions=$actions+2;
 }
 function sl($idx,$level,$info=''){
-	//lg('SETLEVEL '.$idx.' '.$level.' '.$info);
+	lg('SETLEVEL '.$idx.' '.$level.' '.$info);
 	file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd=Set%20Level&level='.$level);
 }
 function ud($idx,$nvalue,$svalue,$info=""){
@@ -28,9 +36,9 @@ function ud($idx,$nvalue,$svalue,$info=""){
 	global $actions;$actions=$actions+1;
 }
 function telegram($msg,$silent=true,$to=1){
-	$telegrambot='123456789:AAEZ-xCRhO-ABCDEFCiJs8q9A_3YIr9irxI';
+	$telegrambot='123456789:ABCD-xCRhO-RBfUqICiJs8q9A_3YIr9irxI';
 	$telegramchatid=123456789;
-	$telegramchatid2=123456789;
+	$telegramchatid2=234567890;
 	for($x=1;$x<=100;$x++){
 		$result=json_decode(file_get_contents('https://api.telegram.org/bot'.$telegrambot.'/sendMessage?chat_id='.$telegramchatid.'&text='.urlencode($msg).'&disable_notification='.$silent));
 		if(isset($result->ok))
@@ -49,11 +57,11 @@ function telegram($msg,$silent=true,$to=1){
 	elseif($to==3){ios($msg);global $actions;$actions=$actions+1;}
 
 }
-function lg($msg){file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=addlogmessage&message='.urlencode('--->> '.$msg));}
+function lg($msg){file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=addlogmessage&message='.urlencode('=> '.$msg));}
 function ios($msg){
-	$appledevice='1234567890AZERTYUIOP/ZHxYptWlD4zoKvGC1VYH805kSRqROHYVNSUzmWV';
-	$appleid='you@me.com';
-	$applepass='myP@sw0rd';
+	$appledevice='1234567890/ZHxYptWlD4zoKvGC1VYH805kSRqROHYVNSUzmWV';
+	$appleid='your@apple.id';
+	$applepass='applepass';
 	require_once('findmyiphone.php');
 	$fmi=new FindMyiPhone(appleid,applepass);
 	$fmi->playSound(appledevice,$msg);
@@ -62,8 +70,8 @@ function ios($msg){
 function sms($msg){
 	exit;
 	$smsuser='clickatelluser';
-	$smspassword='clickatellpassword';
-	$smsapi=123456789;
+	$smspassword='clickatellpass';
+	$smsapi=1234567;
 	$smstofrom=32123456789;
 	file_get_contents('http://api.clickatell.com/http/sendmsg?user='.$smsuser.'&password='.$smspassword.'&api_id='.$smsapi.'&to='.$smstofrom.'&text='.urlencode($msg).'&from='.$smstofrom.'');
 }
@@ -77,7 +85,7 @@ function RefreshZwave($node){
 				$device=$devozw['Description'].' '.$devozw['Name'];
 				break;
 			}
-		//lg(' > Refreshing node '.$node.' '.$device);
+		lg(' > Refreshing node '.$node.' '.$device);
 		for($k=1;$k<=5;$k++){
 			$result=file_get_contents('http://127.0.0.1:8084/ozwcp/refreshpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>'racp','node'=>$node)),),)));
 			if($result==='OK')break;
@@ -100,4 +108,3 @@ function ex($x){
 	}
 	return $return;
 }
-//$msg='execution '.$dev.' = '.number_format((($split-$start)*1000),3,'.','').' + '.number_format(((microtime(true)-$split)*1000),3,'.','').' msec for cron'.$cron;if($actions>0)$msg.=' + '.$actions.' actions';lg($msg);
