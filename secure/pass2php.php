@@ -1,39 +1,51 @@
-<?php error_reporting(E_ALL);ini_set("display_errors","on");date_default_timezone_set('Europe/Brussels');
-define('time',$_SERVER['REQUEST_TIME']);$actions=0;
-$c=ex($_REQUEST['c']);
+<?php error_reporting(E_ALL);ini_set("display_errors","on");date_default_timezone_set('Europe/Brussels');define('time',$_SERVER['REQUEST_TIME']);$c=ex($_REQUEST['c']);
 foreach($c as $device=>$status){
 	if(@include '/volume1/web/secure/pass2php/'.$device.'.php'){
-		//Filter the 'set level' stuff away for dimmers
+		if($device=='brander'){
+			if($status!=apcu_fetch('sbrander'))apcu_store('t'.$device,time);
+		}else{
+			if(apcu_fetch('t'.$device)<time)apcu_store('t'.$device,time);
+		}
 		if(in_array($device,array('eettafel','zithoek','kamer','tobi','alex'))){
 			if($status=='Off')apcu_store('s'.$device,'Off');
 			else apcu_store('s'.$device,filter_var($status,FILTER_SANITIZE_NUMBER_INT));
 		}else apcu_store('s'.$device,$status);
-		apcu_store('t'.$device,time);
 		$dev=$device;
+		if($device=='miniliving1s'&&$status=='Off')print strftime("%Y-%m-%d %H:%M:%S",time()).'   => CRON Forced'.PHP_EOL;
+		else print strftime("%Y-%m-%d %H:%M:%S",time()).'   -> '.$device.' -> '.$status.PHP_EOL;
 	}
+	else{if(!empty($device)&&!endswith($device,'_Utility')&&!endswith($device,'_Temperature'))print strftime("%Y-%m-%d %H:%M:%S",time()).'      '.$device.' -> '.$status.PHP_EOL;}
 }
 if(!isset($dev))die();
 include '/volume1/web/secure/__CRON.php';
-function sw($idx,$action='',$info=''){
-	lg('SWITCH '.$idx.' '.$action.' '.$info);
-	if(empty($action))file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd=Toggle');
-	else file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd='.$action);
-	global $actions;$actions=$actions+1;
+function sw($name,$action='Toggle',$comment=''){
+	$msg = strftime("%Y-%m-%d %H:%M:%S",time()).'   => SWITCH '.$name.' => '.$action;
+	if(!empty($comment)) $msg.=' => '.$comment;
+	print $msg.PHP_EOL;
+	if(apcu_exists('i'.$name)){
+		file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd='.$action);
+		//sleep(2);
+	}else{
+		apcu_store('s'.$name,$action);apcu_store('t'.$name,time);
+	}
 }
-function double($idx,$action,$comment='',$wait=2000000){
-	sw($idx,$action,$comment);
-	usleep($wait);
-	sw($idx,$action,$comment.' repeat',0);
-	global $actions;$actions=$actions+2;
+function double($name,$action,$comment='',$wait=2000000){sw($name,$action,$comment);usleep($wait);sw($name,$action,$comment.' repeat');}
+function sl($name,$level,$info=''){
+	$msg=strftime("%Y-%m-%d %H:%M:%S",time()).'   => SETLEVEL '.$name.' => '.$level;
+	if(!empty($comment)) $msg.=' => '.$comment;
+	print $msg.PHP_EOL;
+	if(apcu_exists('i'.$name)){
+		file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd=Set%20Level&level='.$level);
+		//sleep(2);
+	}
 }
-function sl($idx,$level,$info=''){
-	lg('SETLEVEL '.$idx.' '.$level.' '.$info);
-	file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=switchlight&idx='.$idx.'&switchcmd=Set%20Level&level='.$level);
-}
-function ud($idx,$nvalue,$svalue,$info=""){
-	if(!in_array($idx, array(395,532,534)))lg("UPDATE ".$idx." ".$nvalue." ".$svalue." ".$info);
-	file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=udevice&idx='.$idx.'&nvalue='.$nvalue.'&svalue='.$svalue);
-	global $actions;$actions=$actions+1;
+function ud($name,$nvalue,$svalue,$info=""){
+	if(apcu_exists('i'.$name)){
+		file_get_contents('http://127.0.0.1:8084/json.htm?type=command&param=udevice&idx='.apcu_fetch('i'.$name).'&nvalue='.$nvalue.'&svalue='.$svalue);
+		//sleep(4);
+	}else{
+		apcu_store('s'.$name,$svalue);apcu_store('t'.$name,time);
+	}
 }
 function telegram($msg,$silent=true,$to=1){
 	$telegrambot='123456789:ABCD-xCRhO-RBfUqICiJs8q9A_3YIr9irxI';
@@ -85,13 +97,26 @@ function RefreshZwave($node){
 				$device=$devozw['Description'].' '.$devozw['Name'];
 				break;
 			}
-		lg(' > Refreshing node '.$node.' '.$device);
+		print strftime("%Y-%m-%d %H:%M:%S",time()).'   => Refreshing node '.$node.' '.$device.PHP_EOL;
 		for($k=1;$k<=5;$k++){
 			$result=file_get_contents('http://127.0.0.1:8084/ozwcp/refreshpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>'racp','node'=>$node)),),)));
 			if($result==='OK')break;
 			sleep(1);
 		}
-		/*if(apcu_fetch('timedeadnodes')<time-298){apcu_store('timedeadnodes',time);foreach($devices as $node=>$data){if($node=="result"){foreach($data as $index=>$eltsNode){if($eltsNode["State"]=="Dead"&&!in_array($eltsNode['NodeID'],array(57))){telegram('Node '.$eltsNode['NodeID'].' '.$eltsNode['Description'].' ('.$eltsNode['Name'].') marked as dead, reviving '.ZwaveCommand($eltsNode['NodeID'],'HasNodeFailed'));ControllerBusy(10);ZwaveCommand(1,'Cancel');}}}}}*/
+		if(apcu_fetch('timedeadnodes')<time-298){
+			apcu_store('timedeadnodes',time);
+			foreach($devices as $node=>$data){
+				if($node=="result"){
+					foreach($data as $index=>$eltsNode){
+						if($eltsNode["State"]=="Dead"&&!in_array($eltsNode['NodeID'],array(57))){
+							telegram('Node '.$eltsNode['NodeID'].' '.$eltsNode['Description'].' ('.$eltsNode['Name'].') marked as dead, reviving '.ZwaveCommand($eltsNode['NodeID'],'HasNodeFailed'));
+							ControllerBusy(10);
+							ZwaveCommand(1,'Cancel');
+						}
+					}
+				}
+			}
+		}
 	}
 }
 function Zwavecancelaction(){file_get_contents('http://127.0.0.1:8084/ozwcp/admpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>'cancel')),),)));}
@@ -107,4 +132,10 @@ function ex($x){
 		else $return[$keyval[0]]='';
 	}
 	return $return;
+}
+function endswith($string, $test) {
+    $strlen = strlen($string);
+    $testlen = strlen($test);
+    if ($testlen > $strlen) return false;
+    return substr_compare($string, $test, $strlen - $testlen, $testlen) === 0;
 }
