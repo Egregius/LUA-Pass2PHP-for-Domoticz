@@ -1,2 +1,2 @@
 <?php
-sw(apcu_fetch('izoldertrap'),'Off','zoldertrap open');
+if($status=='On')sw('zoldertrap','Off','open');

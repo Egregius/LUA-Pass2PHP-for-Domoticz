@@ -1,2 +1,2 @@
 <?php
-sl(apcu_fetch('ialex'),2,'Alex');
+if($status=='On')sl('alex',2);

@@ -1,6 +1,6 @@
 <?php
 if($status=='On'){
-	sw(apcu_fetch('ideurbel'),'On','Deurbel sirene');
+	sw('deurbel','On','sirene');
 	sleep(2);
-	sw(apcu_fetch('isirene'),'Off','sirene');
+	sw('sirene','Off');
 }

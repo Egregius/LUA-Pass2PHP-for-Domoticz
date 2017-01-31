@@ -5,13 +5,10 @@ if(apcu_fetch('skodi')=='On'){
 	$properties=json_decode(file_get_contents('http://192.168.2.7:1597/jsonrpc?request={"jsonrpc":"2.0","method":"Player.GetProperties","id":1,"params":{"playerid":1,"properties":["playlistid","speed","position","totaltime","time","audiostreams","currentaudiostream","subtitleenabled","subtitles","currentsubtitle"]}}',false,$ctx),true);
 	if(!empty($properties['result'])){
 		$prop=$properties['result'];
-		if($prop['speed']==0)sw(apcu_fetch('iwasbak'),'On');
-		else ud(apcu_fetch('iminiliving4l'),0,'On');
+		if($prop['speed']==0)sw('wasbak','On');
+		else ud('miniliving4l',0,'On');
 	}
 }else{
-	if(apcu_fetch('swasbak')=='On'){
-		ud(apcu_fetch('iminiliving4l'),0,'On');
-	}elseif(apcu_fetch('swasbak')=='Off'){
-		sw(apcu_fetch('iwasbak'),'On');
-	}
+	if(apcu_fetch('swasbak')=='On')ud('miniliving4l',0,'On');
+	elseif(apcu_fetch('swasbak')=='Off')sw('wasbak','On');
 }

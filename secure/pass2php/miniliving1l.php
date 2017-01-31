@@ -1,11 +1,13 @@
 <?php
-if(apcu_fetch('sdenon')=='Off')sw(apcu_fetch('idenon'),'On','Denon');
-if(apcu_fetch('stv')=='On')sw(apcu_fetch('itv'),'Off','TV');
-if(apcu_fetch('zon')>10){
-	if(apcu_fetch('skristal')=='On')sw(apcu_fetch('ikristal'),'Off','Kristal');
-	if(apcu_fetch('stvled')=='On')sw(apcu_fetch('itvled'),'Off','tvled');
+if($status=='On'){
+	if(apcu_fetch('sdenon')=='Off')sw('denon','On');
+	if(apcu_fetch('stv')=='On')sw('tv','Off');
+	if(apcu_fetch('zon')>10){
+		if(apcu_fetch('skristal')=='On')sw('kristal','Off');
+		if(apcu_fetch('stvled')=='On')sw('tvled','Off');
+	}
+	$ctx=stream_context_create(array('http'=>array('timeout'=>3)));
+	file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutMasterVolumeSet/-50.0',false,$ctx);
+	usleep(800000);
+	file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutZone_InputFunction/TUNER',false,$ctx);
 }
-$ctx=stream_context_create(array('http'=>array('timeout'=>3)));
-file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutMasterVolumeSet/-50.0',false,$ctx);
-usleep(800000);
-file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutZone_InputFunction/TUNER',false,$ctx);

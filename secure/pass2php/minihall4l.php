@@ -1,3 +1,5 @@
 <?php
-sl(apcu_fetch('itobi'),18,'dimmer Tobi');
-apcu_store('dimactiontobi',1);
+if($status=='On'){
+	sl('tobi',18,'sleep');
+	apcu_store('dimactiontobi',1);
+}

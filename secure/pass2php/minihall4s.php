@@ -1,2 +1,2 @@
 <?php
-sw(apcu_fetch('izoldertrap'),'On','zoldertrap toe');
+sw('zoldertrap','On','toe');
