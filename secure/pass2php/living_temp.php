@@ -3,7 +3,5 @@ $room='living';
 $prev=apcu_fetch('s'.$room.'_temp');
 $set=apcu_fetch('s'.$room.'_set');
 $tbrander=apcu_fetch('tbrander');
-if($status>$prev&&$status>$set&&$tbrander<time-600)
-	sw(apcu_fetch('ibrander'),'Off','Brander door '.$room.' prev='.$prev.', new='.$status);
-elseif($status<$prev&&$status<$set&&$tbrander<time-600)
-	sw(apcu_fetch('ibrander'),'Off','Brander door '.$room.' prev='.$prev.', new='.$status);
+if($status>$prev&&$status>$set&&$tbrander<(time-600)){sw('brander','Off','door '.$room.' prev='.$prev.', new='.$status);apcu_store('tbrander',time);}
+elseif($status<$prev&&$status<$set&&$tbrander<(time-600)){sw('brander','On','door '.$room.' prev='.$prev.', new='.$status);apcu_store('tbrander',time);}

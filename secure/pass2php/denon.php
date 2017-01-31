@@ -1,5 +1,5 @@
 <?php
-if(apcu_fetch('sdenon')d=="On"){
+if($status=="On"){
 	$ctx=stream_context_create(array('http'=>array('timeout'=>2)));
 	for($x=0;$x<=50;$x++){
 		usleep(500000);
@@ -15,6 +15,8 @@ if(apcu_fetch('sdenon')d=="On"){
 				lg('Denon '.$x.' OK');
 				sleep(1);
 				file_get_contents('http://192.168.2.4/MainZone/index.put.asp?cmd0=PutZone_OnOff%2FON&cmd1=aspMainZone_WebUpdateStatus%2F&ZoneName=ZONE2',false,$ctx);
+				sleep(1);
+				exec('curl http://127.0.0.1/secure/denonlevels.php &> /dev/null &');
 				break;
 			}
 		}
