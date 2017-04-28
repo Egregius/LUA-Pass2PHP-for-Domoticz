@@ -1,12 +1,15 @@
 <?php
 if($status=="On"){
 	$kamer=apcu_fetch('skamer');
-	if(apcu_fetch('sslapen')=='Off'&&$kamer!=16)sl('kamer',17);
-	elseif(apcu_fetch('sslapen')=='Off'&&$kamer==16){
+	if($Weg==0&&$kamer!=16)sl('kamer',17);
+	elseif($Weg==0&&$kamer==16){
 		sl('kamer',13);
 		include('pass2php/minihall1s.php');
-	}elseif(apcu_fetch('sslapen')=='On'&&$kamer==12){
-		sl('kamer',11);
-		apcu_store('dimmerkamer',1);
+	}elseif($Weg==1){
+		sl('kamer',10);
+		apcu_store('dimactionkamer',1);
 	}
-}else include('pass2php/minihall3s.php');
+}else{
+	if($Weg==0)sw('lichtbadkamer1','On');
+	else include('minihall3s.php');
+}

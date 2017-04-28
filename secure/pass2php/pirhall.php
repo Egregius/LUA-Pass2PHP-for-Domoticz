@@ -1,14 +1,14 @@
 <?php
-if($status=='On'){
-	if(apcu_fetch('sslapen')=='Off'&&apcu_fetch('shall')=='Off'&&(time<strtotime('8:00')||apcu_fetch('zon')<200)){
+if($status=='On'&&$auto){
+	if($Weg==0&&apcu_fetch('shall')=='Off'&&(time<strtotime('8:00')||$zon<50)){
 		sw('hall','On');
 		apcu_store('thall',time);
 	}
-	if(apcu_fetch('sinkom')=='Off'&&(time<strtotime('8:00')||apcu_fetch('zon')<200)){
+	if(apcu_fetch('sinkom')=='Off'&&(time<strtotime('8:00')||$zon<50)){
 		sw('inkom','On');
 		apcu_store('tinkom',time);
 	}
-	if(apcu_fetch('sweg')=='On'&&apcu_fetch('smeldingen')=='On'&&apcu_fetch('tweg')<time-178&&apcu_fetch('tslapen')<time-178){
+	if($Weg==2&&$meldingen&&apcu_fetch('tWeg')<time-178){
 		sw('sirene','On');
 		telegram('Beweging hall om '.strftime("%k:%M:%S",time),false,3);
 	}

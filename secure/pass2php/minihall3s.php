@@ -1,5 +1,3 @@
 <?php
-if($status=='On'){
-	if(apcu_fetch('sslapen')=='On')sw('slapen','Off');
-	if(apcu_fetch('shall')=='Off')sw('hall','On');
-}
+if($Weg!=0){apcu_store('Weg',0);apcu_store('tWeg',time);}
+if(apcu_fetch('shall')=='Off')sw('hall','On');
