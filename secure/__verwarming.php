@@ -8,8 +8,12 @@ $items=array('livingZ','kamerZ','tobiZ','alexZ');
 foreach($items as $item)${$item}=apcu_fetch('s'.$item);
 $heating=apcu_fetch('sheating');
 $brander=apcu_fetch('sbrander');
+$branderac=apcu_fetch('sbranderac');
 $buiten_temp=apcu_fetch('buiten_temp');
 $timebrander=time-apcu_fetch('ttbrander');
+$timebranderac=time-apcu_fetch('tbranderac');
+$licht=apcu_fetch('slichtbadkamer1');
+
 $tobithuis=false;
 $Setkamer=4;
 $setpointkamer=apcu_fetch('setpointkamer');
@@ -57,7 +61,7 @@ if($setpointalex!=0&&apcu_fetch('talex_set')<time-21600){apcu_store('setpointale
 if($setpointalex!=2){
 	if($buiten_temp<16&&apcu_fetch('sraamalex')=='Closed'&&$heating=='On'&&(apcu_fetch('traamalex')<time-1800||time>strtotime('19:00'))){
 		//$Setalex=8;
-		if(time<strtotime('5:00')||time>strtotime('19:00'))$Setalex=16.0;
+		if(time<strtotime('5:00')||time>strtotime('19:00'))$Setalex=15.0;
 	}
 	if($alex_set!=$Setalex){ud('alex_set',0,$Setalex);$alex_set=$Setalex;}
 }
@@ -68,22 +72,19 @@ if($setpointliving!=0&&apcu_fetch('tliving_set')<time-21600){apcu_store('setpoin
 if($setpointliving!=2){
 	if($buiten_temp<20&&$heating=='On'&&apcu_fetch('sraamliving')=='Closed'){
 		$Setliving=17;
-		if(time>=strtotime('5:00')&&time<strtotime('5:30'))$slapen=='On'?$Setliving=17.5:$Setliving=20.5;
-		elseif(time>=strtotime('5:30')&&time<strtotime('6:00'))$slapen=='On'?$Setliving=18.0:$Setliving=20.5;
-		elseif(time>=strtotime('6:00')&&time<strtotime('6:30'))$slapen=='On'?$Setliving=18.5:$Setliving=20.5;
-		elseif(time>=strtotime('6:30')&&time<strtotime('7:00'))$slapen=='On'?$Setliving=19.0:$Setliving=20.5;
-		elseif(time>=strtotime('7:00')&&time<strtotime('8:15'))$slapen=='On'?$Setliving=19.5:$Setliving=20.5;
-		elseif(time>=strtotime('8:15')&&time<strtotime('19:55'))$slapen=='On'?$Setliving=20.0:$Setliving=20.5;
+		if(time>=strtotime('5:00')&&time<strtotime('5:30'))$Weg>0?$Setliving=17.5:$Setliving=20.0;
+		elseif(time>=strtotime('5:30')&&time<strtotime('6:00'))$Weg>0?$Setliving=18.0:$Setliving=20.0;
+		elseif(time>=strtotime('6:00')&&time<strtotime('6:30'))$Weg>0?$Setliving=18.5:$Setliving=20.0;
+		elseif(time>=strtotime('6:30')&&time<strtotime('7:00'))$Weg>0?$Setliving=19.0:$Setliving=20.0;
+		elseif(time>=strtotime('7:00')&&time<strtotime('8:15'))$Weg>0?$Setliving=19.5:$Setliving=20.0;
+		elseif(time>=strtotime('8:15')&&time<strtotime('18:45'))$Weg>0?$Setliving=20.0:$Setliving=20.5;
+		if($Setliving==20.5){
+			$Setliving=$living_set;
+			if(time>=strtotime('11:00')&&$zon>2000)$Setliving=19;
+			elseif($zon<1000)$Setliving=20.5;
+		}
 	}
-	if($living_set!=$Setliving){ud('living_set',0,$Setliving);$living_set=$Setliving;}
-}
-
-$Setfrigo=9;
-$setpointfrigo=apcu_fetch('setpointfrigo');
-if($setpointfrigo!=0/*&&apcu_fetch('tfrigo_set')<time-21600*/){apcu_store('setpointfrigo',0);$setpointfrigo=0;}
-if($setpointfrigo!=2){
-	if(!$weg&&!$slapen)$Setfrigo=7;
-	if($frigo_set!=$Setfrigo){ud('frigo_set',0,$Setfrigo);$frigo_set=$Setfrigo;}
+	if($living_set!=$Setliving){print 'setpointliving'.PHP_EOL;ud('living_set',0,$Setliving);$living_set=$Setliving;}
 }
 
 $kamers=array('living','kamer','tobi','alex');
@@ -108,6 +109,10 @@ foreach($kamers as $kamer){
 		ud($kamer.'Z',0,${'RSet'.$kamer});
 	}
 }
+
+if((($bigdif<=0.1&&$timebranderac>600)||$licht=='On')&&$branderac!='On'){sw('branderac','On');sleep(2);}
+elseif($bigdif>0.2&&$licht=='Off'&&$branderac!='Off'&&$timebranderac>600){sw('branderac','Off');}
+
 if($bigdif<=-0.6&&$brander=="Off"&&$timebrander>60)sw('brander','On', 'brander1 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
 elseif($bigdif<=-0.5&&$brander=="Off"&&$timebrander>80)sw('brander','On', 'brander2 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
 elseif($bigdif<=-0.4&&$brander=="Off"&&$timebrander>100)sw('brander','On', 'brander3 dif = '.$bigdif.', was off for '.convertToHours($timebrander));
@@ -124,7 +129,7 @@ elseif($bigdif>=-0.4&&$brander=="On"&&$timebrander>420)sw('brander','Off','brand
 elseif($bigdif>=-0.5&&$brander=="On"&&$timebrander>480)sw('brander','Off','brander14 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
 elseif($bigdif>=-0.6&&$brander=="On"&&$timebrander>600)sw('brander','Off','brander15 dif = '.$bigdif.', was on for '.convertToHours($timebrander));
 
-if($weg=='On'){if($heating=='On'&&apcu_fetch('theating')<time-3598)sw('heating','Off');}
+if($Weg==2){if($heating=='On'&&apcu_fetch('theating')<time-3598)sw('heating','Off');}
 else{if($heating!='On')sw('heating','On');}
 
 function setradiator($name,$dif,$koudst=false,$set){
@@ -133,9 +138,6 @@ function setradiator($name,$dif,$koudst=false,$set){
 	if($setpoint>28)$setpoint=28.0;elseif($setpoint<4)$setpoint=4.0;
 	return round($setpoint,0).".0";
 }
-
-
-if(apcu_fetch('slichtbadkamer')=='On'||apcu_fetch('slichtbadkamer1')=='On'||apcu_fetch('slichtbadkamer2')=='On')$licht='On';else $licht='Off';
 
 $badkamer_set=apcu_fetch('sbadkamer_set');
 if(!isset($deurbadkamer))$deurbadkamer=apcu_fetch('sdeurbadkamer');
