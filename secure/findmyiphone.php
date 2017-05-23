@@ -1,10 +1,9 @@
 <?PHP
-
 /*
  Copyright (C) Alan Beebe (alan.beebe@gmail.com).
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
- 
+
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
  http://www.apache.org/licenses/LICENSE-2.0
@@ -15,9 +14,9 @@
  limitations under the License.
 
   v1.0 - January 2, 2015
-  
+
 */
- 
+
 class FindMyiPhone {
 
 	private $client = array(
@@ -32,10 +31,8 @@ class FindMyiPhone {
 	private $debug;
 	private $username;
 	private $password;
-	private $Apple_MMe_Host;
-	private $Apple_MMe_Scope;
 	public $devices = array();
-	
+
 	/**
      * This is where you initialize FindMyiPhone with your iCloud credentials
      * Example: $fmi = new FindMyiPhone("you@example.com", "MyPassWord123");
@@ -43,7 +40,7 @@ class FindMyiPhone {
      * @param username	iCloud username
      * @param password	iCloud password
      * @param debug		(Optional) Set to TRUE and all the API requests and responses will be printed out
-     * @return          FindMyiPhone instance 
+     * @return          FindMyiPhone instance
      */
 	public function __construct($username, $password, $debug = false) {
 		$this->username = $username;
@@ -51,14 +48,14 @@ class FindMyiPhone {
 		$this->debug = $debug;
 		$this->authenticate();
 	}
-	
+
 	/**
      * This method attempts to get the most current location of a device
      * Example: $fmi->locate("dCsaBcqBOdnNop4wvy2VfIk8+HlQ/DRuqrmiwpsLdLTuiCORQDJ9eHYVQSUzmWV", 30);
      *
      * @param deviceID	ID of the device you want to locate
      * @param timeout	(Optional) Maximum number of seconds to spend trying to locate the device
-     * @return          FindMyiPhoneLocation object 
+     * @return          FindMyiPhoneLocation object
      */
 	public function locate($deviceID, $timeout = 60) {
 		$startTime = time();
@@ -70,7 +67,7 @@ class FindMyiPhone {
 		}
 		return $this->devices[$deviceID]->location;
 	}
-	
+
 	/**
      * Play a sound and display a message on a device
      * Example: $fmi->playSound("dCsaBcqBOdnNop4wvy2VfIk8+HlQ/DRuqrmiwpsLdLTuiCORQDJ9eHYVQSUzmWV", "Whats up?");
@@ -79,11 +76,11 @@ class FindMyiPhone {
      * @param message	Message you want displayed on the device
      */
 	public function playSound($deviceID, $message) {
-		$url = "https://".$this->Apple_MMe_Host."/fmipservice/device/".$this->Apple_MMe_Scope."/playSound";
-		$body = json_encode(array("device"=>$deviceID, "subject"=>$message)); 
+		$url = "https://fmipmobile.icloud.com/fmipservice/device/".$this->username."/playSound";
+		$body = json_encode(array("device"=>$deviceID, "subject"=>$message));
 		list($headers, $body) = $this->curlPOST($url, $body, $this->username.":".$this->password);
 	}
-	
+
 	/**
      * Put a device into lost mode. The device will immediately lock until the user enters the correct passcode
      * Example: $fmi->lostMode("dCsaBcqBOdnNop4wvy2VfIk8+HlQ/DRuqrmiwpsLdLTuiCORQDJ9eHYVQSUzmWV", "You got locked out", "555-555-5555");
@@ -93,11 +90,11 @@ class FindMyiPhone {
      * @param phoneNumber	(Optional) Phone number you want displayed on the lock screen
      */
 	public function lostMode($deviceID, $message, $phoneNumber = "") {
-		$url = "https://".$this->Apple_MMe_Host."/fmipservice/device/".$this->Apple_MMe_Scope."/lostDevice";
-		$body = json_encode(array("device"=>$deviceID, "ownerNbr"=>$phoneNumber, "text"=>$message, "lostModeEnabled"=>true)); 
+		$url = "https://fmipmobile.icloud.com/fmipservice/device/".$this->username."/lostDevice";
+		$body = json_encode(array("device"=>$deviceID, "ownerNbr"=>$phoneNumber, "text"=>$message, "lostModeEnabled"=>true));
 		list($headers, $body) = $this->curlPOST($url, $body, $this->username.":".$this->password);
 	}
-	
+
 	/**
      * Print all the available information for every device on the users account.
      * This is really useful when you want to get the ID for a device.
@@ -164,7 +161,7 @@ DEVICE;
         		</PRE>
 TABLEFOOTER;
 	}
-	
+
 	/**
 	 *  This is where the users credentials are authenticated.
 	 *  The Apple_MMe_Host and Apple_MMe_Scope values are saved and used to generate the URL for all subsequent API calls
@@ -172,19 +169,18 @@ TABLEFOOTER;
 	private function authenticate() {
 		$url = "https://fmipmobile.icloud.com/fmipservice/device/".$this->username."/initClient";
 		list($headers, $body) = $this->curlPOST($url, "", $this->username.":".$this->password);
-		$this->Apple_MMe_Host = $headers["X-Apple-MMe-Host"];
-		$this->Apple_MMe_Scope = $headers["X-Apple-MMe-Scope"];
-		if ($headers["http_code"] == 401) {
+
+		/*if ($headers["http_code"] == 401) {
 			throw new Exception('Your iCloud username and/or password are invalid');
-		}
+		}*/
 	}
-	
+
 	/**
      * This is where all the devices are downloaded and processed
      * Example: print_r($fmi->devices)
      */
 	private function getDevices() {
-		$url = "https://".$this->Apple_MMe_Host."/fmipservice/device/".$this->Apple_MMe_Scope."/initClient";
+		$url = "https://fmipmobile.icloud.com/fmipservice/device/".$this->username."/initClient";
 		list($headers, $body) = $this->curlPOST($url, "", $this->username.":".$this->password);
 		$this->devices = array();
 		for ($x = 0; $x < sizeof($body["content"]); $x++) {
@@ -192,12 +188,12 @@ TABLEFOOTER;
 			$this->devices[$device->ID] = $device;
 		}
 	}
-	
+
 	/**
 	 * This method takes the raw device details from the API and converts it to a FindMyiPhoneDevice object
 	 */
 	private function generateDevice($deviceDetails) {
-		$device = new FindMyiPhoneDevice();	
+		$device = new FindMyiPhoneDevice();
 		$device->API = $deviceDetails;
 		$device->ID = $device->API["id"];
 		$device->batteryLevel = $device->API["batteryLevel"];
@@ -215,12 +211,12 @@ TABLEFOOTER;
 		$device->name = $device->API["name"];
 		return $device;
 	}
-	
+
 	/**
 	 * This method refreshes the list of devices on the users iCloud account
 	 */
 	private function refreshDevices($deviceID = "") {
-		$url = "https://".$this->Apple_MMe_Host."/fmipservice/device/".$this->Apple_MMe_Scope."/refreshClient";
+		$url = "https://fmipmobile.icloud.com/fmipservice/device/".$this->username."/refreshClient";
 		if (strlen($deviceID) > 0) {
 			$body = json_encode(array("clientContext"=>array("appVersion"=>$this->client["app-version"], "shouldLocate"=>true, "selectedDevice"=>$deviceID, "fmly"=>true)));
 		}
@@ -231,23 +227,23 @@ TABLEFOOTER;
 			$this->devices[$device->ID] = $device;
 		}
 	}
-	
+
 	/**
 	 * Helper method for making POST requests
 	 */
 	private function curlPOST($url, $body, $authentication = "") {
-		$ch = curl_init($url);                                                                      
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $body);                                                                  
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_VERBOSE, 1);
 		curl_setopt($ch, CURLOPT_HEADER, 1);
 		curl_setopt($ch, CURLOPT_USERAGENT, $this->client["user-agent"]);
 		if (strlen($authentication) > 0) {
-			curl_setopt($ch, CURLOPT_USERPWD, $authentication);  
+			curl_setopt($ch, CURLOPT_USERPWD, $authentication);
 		}
 		$arrHeaders = array();
-		$arrHeaders["Content-Length"] = strlen($request);
+//		$arrHeaders["Content-Length"] = strlen($request);
 		foreach ($this->client["headers"] as $key=>$value) {
 			array_push($arrHeaders, $key.": ".$value);
 		}
@@ -257,7 +253,7 @@ TABLEFOOTER;
 		$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 		$responseBody = substr($response, $header_size);
 		$headers = array();
-		foreach (explode("\r\n", substr($response, 0, $header_size)) as $i => $line) {
+		/*foreach (explode("\r\n", substr($response, 0, $header_size)) as $i => $line) {
 			if ($i === 0)
             	$headers['http_code'] = $info["http_code"];
 			else {
@@ -265,7 +261,7 @@ TABLEFOOTER;
             	if (strlen($key) > 0)
 	            	$headers[$key] = $value;
 			}
-        }
+        }*/
         if ($this->debug) {
         	$debugURL = htmlentities($url);
         	$debugRequestBody = htmlentities(print_r(json_decode($body, true), true));
