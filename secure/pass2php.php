@@ -1,5 +1,4 @@
 <?php
-$log=0;
 //error_reporting(E_ALL);ini_set("display_errors","on");
 date_default_timezone_set('Europe/Brussels');
 define('time',$_SERVER['REQUEST_TIME']);
@@ -16,6 +15,7 @@ if($_SERVER['REQUEST_METHOD']=='POST'){
 	$device=$_POST['d'];
 	$status=$_POST['s'];
 	if(@include '/var/www/html/secure/pass2php/'.$device.'.php'){
+		lg($device.' = '.$status);
 		if(in_array($device,array('brander','badkamervuur'))){
 			$prev=apcu_fetch('s'.$device);
 			if($status!=$prev)apcu_store('tt'.$device,time);
@@ -25,57 +25,52 @@ if($_SERVER['REQUEST_METHOD']=='POST'){
 			if($status=='Off')apcu_store('s'.$device,'Off');
 			else apcu_store('s'.$device,filter_var($status,FILTER_SANITIZE_NUMBER_INT));
 		}else apcu_store('s'.$device,$status);
-		if($log>=2)lg($device.' -> '.$status);
 	}
 }
 if(apcu_fetch('cron5')<time-4){
 	apcu_store('cron5',time);
+	if(apcu_fetch('cron604800')<time-604790){
+		apcu_store('cron604800',time);
+		include('/var/www/html/secure/_cron604800.php');
+	}
+	if(apcu_fetch('cron28800')<time-27790){
+		apcu_store('cron28800',time);
+		include('/var/www/html/secure/_cron28800.php');
+	}
+	if(apcu_fetch('cron180')<time-136){
+		apcu_store('cron180',time);
+		include('/var/www/html/secure/_cron180.php');
+	}
 	if(apcu_fetch('cron60')<time-58){
 		apcu_store('cron60',time);
-		if(apcu_fetch('cron180')<time-145){
-			apcu_store('cron180',time);
-			if(apcu_fetch('cron28800')<time-27798){
-				apcu_store('cron28800',time);
-				if(apcu_fetch('cron604800')<time-604798){
-					apcu_store('cron604800',time);
-					include('/var/www/html/secure/_cron604800.php');
-				}
-				include('/var/www/html/secure/_cron28800.php');
-			}
-			include('/var/www/html/secure/_cron180.php');
-		}
 		include('/var/www/html/secure/_cron60.php');
 	}
 	include('/var/www/html/secure/_cron5.php');
 	include('/var/www/html/secure/_verwarming.php');
 }
 function sw($name,$action='Toggle',$comment=''){
-	if(apcu_exists('i'.$name))file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd='.$action);
-	else{apcu_store('s'.$name,$action);apcu_store('t'.$name,time);}
 	$msg = 'SWITCH '.$name.' => '.$action;
 	if(!empty($comment)) $msg.=' => '.$comment;
-	global $log;
-	if($log>=1)lg($msg);
+	lg($msg);
+	if(apcu_exists('i'.$name))file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd='.$action);
+	else{apcu_store('s'.$name,$action);apcu_store('t'.$name,time);}
 }
 function double($name,$action,$comment='',$wait=2000000){sw($name,$action,$comment);usleep($wait);sw($name,$action,$comment.' repeat');}
 function sl($name,$level,$info=''){
-	if(apcu_exists('i'.$name))file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd=Set%20Level&level='.$level);
 	$msg='SETLEVEL '.$name.' => '.$level;
 	if(!empty($comment)) $msg.=' => '.$comment;
+	lg($msg);
 	if(apcu_exists('i'.$name))file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd=Set%20Level&level='.$level);
-	global $log;
-	if($log>=1)lg($msg);
 }
 function ud($name,$nvalue,$svalue,$comment=""){
+	$msg = 'SWITCH '.$name.' => '.$nvalue.' '.$svalue;
+	if(!empty($comment)) $msg.=' => '.$comment;
+	lg($msg);
 	if(apcu_exists('i'.$name)){
 		file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=udevice&idx='.apcu_fetch('i'.$name).'&nvalue='.$nvalue.'&svalue='.$svalue);
 	}else{
 		apcu_store('s'.$name,$svalue);apcu_store('t'.$name,time);
 	}
-	$msg = 'SWITCH '.$name.' => '.$nvalue.' '.$svalue;
-	if(!empty($comment)) $msg.=' => '.$comment;
-	global $log;
-	if($log>=1)lg($msg);
 }
 function telegram($msg,$silent=true,$to=1){
 	$telegrambot='123456789:ABCD-xCRhO-RBfUqICiJs8q9A_3YIr9irxI';
@@ -99,7 +94,15 @@ function telegram($msg,$silent=true,$to=1){
 	elseif($to==3){ios($msg);global $actions;$actions=$actions+1;}
 
 }
-function lg($msg){file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=addlogmessage&message='.urlencode('=> '.$msg));}
+function lg($msg){
+	$time    = microtime(true);
+	$dFormat = "Y-m-d H:i:s";
+	$mSecs   =  $time - floor($time);
+	$mSecs   =  substr(number_format($mSecs,3),1);
+	$fp = fopen('/var/log/floorplanlog.log',"a+");
+	fwrite($fp, sprintf("%s%s %s \n", date($dFormat), $mSecs, $msg));
+	fclose($fp);
+}
 function RefreshZwave($node){
 	$last=apcu_fetch('refresh'.$node);
 	apcu_store('refresh'.$node,time);
