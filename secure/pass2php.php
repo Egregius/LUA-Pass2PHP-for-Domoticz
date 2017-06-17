@@ -49,11 +49,23 @@ if(apcu_fetch('cron5')<time-4){
 	include('/var/www/html/secure/_verwarming.php');
 }
 function sw($name,$action='Toggle',$comment=''){
-	$msg = 'SWITCH '.$name.' => '.$action;
-	if(!empty($comment)) $msg.=' => '.$comment;
-	lg($msg);
-	if(apcu_exists('i'.$name))file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd='.$action);
-	else{apcu_store('s'.$name,$action);apcu_store('t'.$name,time);}
+	if(is_array($name)){
+		foreach($name as $i){
+			if($i=='media')sw(array('tv','denon','tvled','kristal'),$action);
+			elseif($i=='lichtenbeneden')sw(array('pirgarage','pirkeuken','pirliving','pirinkom','eettafel','zithoek','tvled','kristal','bureel','garage','keuken','werkblad','wasbook','kookplaat','inkom','zolderg'),$action);
+			elseif($i=='lichtenboven')sw(array('pirhall','lichtbadkamer1','lichtbadkamer2','kamer','tobi','alex','hall','zolder'),$action);
+			elseif($i=='slapen')sw(array('pirhall','hall','lichtenbeneden','poortrf','dampkap','GroheRed'),$action);
+			elseif($i=='weg')sw(array('slapen','lichtenbeneden','lichtenboven'),$action);
+			else{if(apcu_fetch('s'.$i)!=$action)sw($i,$action);}
+		}
+	}else{
+		$msg = 'SWITCH '.$name.' => '.$action;
+		if(!empty($comment)) $msg.=' => '.$comment;
+		lg($msg);
+		if(apcu_exists('i'.$name))file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd='.$action);
+		else{apcu_store('s'.$name,$action);apcu_store('t'.$name,time);}
+		usleep(50000);
+	}
 }
 function double($name,$action,$comment='',$wait=2000000){sw($name,$action,$comment);usleep($wait);sw($name,$action,$comment.' repeat');}
 function sl($name,$level,$info=''){
