@@ -1,16 +1,16 @@
 <?php
 //error_reporting(E_ALL);ini_set("display_errors","on");
-date_default_timezone_set('Europe/Brussels');
+date_default_timezone_set('Europe/Amsterdam');
 define('time',$_SERVER['REQUEST_TIME']);
-if(apcu_fetch('slichten_auto')=='On')$auto=true;else $auto=false;
-$Weg=apcu_fetch('Weg');
-if(apcu_fetch('smeldingen')=='On')$meldingen=true;else $meldingen=false;
-if(apcu_exists('zon'))$zon=apcu_fetch('zon');else $zon=10;
-$zongarage=700;
-$zonkeuken=60;
-$zoninkom=15;
-$zonmedia=10;
-$smappeeip='192.168.2.177';
+//if(apcu_fetch('slichten_auto')=='On')$auto=true;else $auto=false;
+//$Weg=apcu_fetch('Weg');
+//if(apcu_fetch('smeldingen')=='On')$meldingen=true;else $meldingen=false;
+//if(apcu_exists('zon'))$zon=apcu_fetch('zon');else $zon=10;
+//$zongarage=700;
+//$zonkeuken=60;
+//$zoninkom=15;
+//$zonmedia=10;
+//$smappeeip='192.168.2.177';
 if($_SERVER['REQUEST_METHOD']=='POST'){
 	$device=$_POST['d'];
 	$status=$_POST['s'];
@@ -46,8 +46,9 @@ if(apcu_fetch('cron5')<time-4){
 		include('/var/www/html/secure/_cron60.php');
 	}
 	include('/var/www/html/secure/_cron5.php');
-	include('/var/www/html/secure/_verwarming.php');
+	//include('/var/www/html/secure/_verwarming.php');
 }
+
 function sw($name,$action='Toggle',$comment=''){
 	if(is_array($name)){
 		foreach($name as $i){
@@ -62,7 +63,7 @@ function sw($name,$action='Toggle',$comment=''){
 		$msg = 'SWITCH '.$name.' => '.$action;
 		if(!empty($comment)) $msg.=' => '.$comment;
 		lg($msg);
-		if(apcu_exists('i'.$name))file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd='.$action);
+		if(apcu_exists('i'.$name))file_get_contents('http://192.168.1.200:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd='.$action);
 		else{apcu_store('s'.$name,$action);apcu_store('t'.$name,time);}
 		usleep(50000);
 	}
@@ -72,14 +73,14 @@ function sl($name,$level,$info=''){
 	$msg='SETLEVEL '.$name.' => '.$level;
 	if(!empty($comment)) $msg.=' => '.$comment;
 	lg($msg);
-	if(apcu_exists('i'.$name))file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd=Set%20Level&level='.$level);
+	if(apcu_exists('i'.$name))file_get_contents('http://192.168.1.200:8080/json.htm?type=command&param=switchlight&idx='.apcu_fetch('i'.$name).'&switchcmd=Set%20Level&level='.$level);
 }
 function ud($name,$nvalue,$svalue,$comment=""){
 	$msg = 'SWITCH '.$name.' => '.$nvalue.' '.$svalue;
 	if(!empty($comment)) $msg.=' => '.$comment;
 	lg($msg);
 	if(apcu_exists('i'.$name)){
-		file_get_contents('http://192.168.2.2:8080/json.htm?type=command&param=udevice&idx='.apcu_fetch('i'.$name).'&nvalue='.$nvalue.'&svalue='.$svalue);
+		file_get_contents('http://192.168.1.200:8080/json.htm?type=command&param=udevice&idx='.apcu_fetch('i'.$name).'&nvalue='.$nvalue.'&svalue='.$svalue);
 	}else{
 		apcu_store('s'.$name,$svalue);apcu_store('t'.$name,time);
 	}
@@ -119,7 +120,7 @@ function RefreshZwave($node){
 	$last=apcu_fetch('refresh'.$node);
 	apcu_store('refresh'.$node,time);
 	if($last<time-3600){
-		$devices=json_decode(file_get_contents('http://192.168.2.2:8080/json.htm?type=openzwavenodes&idx=3',false),true);
+		$devices=json_decode(file_get_contents('http://192.168.1.200:8080/json.htm?type=openzwavenodes&idx=3',false),true);
 		foreach($devices['result'] as $devozw)
 			if($devozw['NodeID']==$node){
 				$device=$devozw['Description'].' '.$devozw['Name'];
@@ -127,7 +128,7 @@ function RefreshZwave($node){
 			}
 		print strftime("%Y-%m-%d %H:%M:%S",time()).'   => Refreshing node '.$node.' '.$device.PHP_EOL;
 		for($k=1;$k<=5;$k++){
-			$result=file_get_contents('http://192.168.2.2:8080/ozwcp/refreshpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>'racp','node'=>$node)),),)));
+			$result=file_get_contents('http://192.168.1.200:8080/ozwcp/refreshpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>'racp','node'=>$node)),),)));
 			if($result==='OK')break;
 			sleep(1);
 		}
@@ -147,9 +148,9 @@ function RefreshZwave($node){
 		}
 	}
 }
-function Zwavecancelaction(){file_get_contents('http://192.168.2.2:8080/ozwcp/admpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>'cancel')),),)));}
-function ZwaveCommand($node,$command){$cm=array('AssignReturnRoute'=>'assrr','DeleteAllReturnRoutes'=>'delarr','NodeNeighbourUpdate'=>'reqnnu','RefreshNodeInformation'=>'refreshnode','RequestNetworkUpdate'=>'reqnu','HasNodeFailed'=>'hnf','Cancel'=>'cancel');$cm=$cm[$command];for($k=1;$k<=5;$k++){$result=file_get_contents('http://192.168.2.2:8080/ozwcp/admpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>$cm,'node'=>'node'.$node)),),)));if($result=='OK')break;sleep(1);}return $result;}
-function ControllerBusy($retries){for($k=1;$k<=$retries;$k++){$result=file_get_contents('http://192.168.2.2:8080/ozwcp/poll.xml');$p=xml_parser_create();xml_parse_into_struct($p,$result,$vals,$index);xml_parser_free($p);foreach($vals as $val){if($val['tag']=='ADMIN'){$result=$val['attributes']['ACTIVE'];break;}}if($result=='false')break;if($k==$retries){ZwaveCommand(1,'Cancel');break;}sleep(1);}}
+function Zwavecancelaction(){file_get_contents('http://192.168.1.200:8080/ozwcp/admpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>'cancel')),),)));}
+function ZwaveCommand($node,$command){$cm=array('AssignReturnRoute'=>'assrr','DeleteAllReturnRoutes'=>'delarr','NodeNeighbourUpdate'=>'reqnnu','RefreshNodeInformation'=>'refreshnode','RequestNetworkUpdate'=>'reqnu','HasNodeFailed'=>'hnf','Cancel'=>'cancel');$cm=$cm[$command];for($k=1;$k<=5;$k++){$result=file_get_contents('http://192.168.1.200:8080/ozwcp/admpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>$cm,'node'=>'node'.$node)),),)));if($result=='OK')break;sleep(1);}return $result;}
+function ControllerBusy($retries){for($k=1;$k<=$retries;$k++){$result=file_get_contents('http://192.168.1.200:8080/ozwcp/poll.xml');$p=xml_parser_create();xml_parse_into_struct($p,$result,$vals,$index);xml_parser_free($p);foreach($vals as $val){if($val['tag']=='ADMIN'){$result=$val['attributes']['ACTIVE'];break;}}if($result=='false')break;if($k==$retries){ZwaveCommand(1,'Cancel');break;}sleep(1);}}
 function convertToHours($time){if($time<600)return substr(strftime('%M:%S',$time),1);elseif($time>=600&&$time<3600)return strftime('%M:%S',$time);else return strftime('%k:%M:%S',$time);}
 function endswith($string,$test){
     $strlen=strlen($string);
