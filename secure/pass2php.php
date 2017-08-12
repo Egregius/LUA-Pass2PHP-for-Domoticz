@@ -151,11 +151,17 @@ function Zwavecancelaction(){file_get_contents('http://192.168.2.2:8080/ozwcp/ad
 function ZwaveCommand($node,$command){$cm=array('AssignReturnRoute'=>'assrr','DeleteAllReturnRoutes'=>'delarr','NodeNeighbourUpdate'=>'reqnnu','RefreshNodeInformation'=>'refreshnode','RequestNetworkUpdate'=>'reqnu','HasNodeFailed'=>'hnf','Cancel'=>'cancel');$cm=$cm[$command];for($k=1;$k<=5;$k++){$result=file_get_contents('http://192.168.2.2:8080/ozwcp/admpost.html',false,stream_context_create(array('http'=>array('header'=>'Content-Type: application/x-www-form-urlencoded\r\n','method'=>'POST','content'=>http_build_query(array('fun'=>$cm,'node'=>'node'.$node)),),)));if($result=='OK')break;sleep(1);}return $result;}
 function ControllerBusy($retries){for($k=1;$k<=$retries;$k++){$result=file_get_contents('http://192.168.2.2:8080/ozwcp/poll.xml');$p=xml_parser_create();xml_parse_into_struct($p,$result,$vals,$index);xml_parser_free($p);foreach($vals as $val){if($val['tag']=='ADMIN'){$result=$val['attributes']['ACTIVE'];break;}}if($result=='false')break;if($k==$retries){ZwaveCommand(1,'Cancel');break;}sleep(1);}}
 function convertToHours($time){if($time<600)return substr(strftime('%M:%S',$time),1);elseif($time>=600&&$time<3600)return strftime('%M:%S',$time);else return strftime('%k:%M:%S',$time);}
-function endswith($string,$test){
-    $strlen=strlen($string);
-    $testlen=strlen($test);
-    if($testlen>$strlen) return false;
-    return substr_compare($string,$test,$strlen-$testlen,$testlen)===0;
+function endswith($string,$test){$strlen=strlen($string);$testlen=strlen($test);if($testlen>$strlen) return false;return substr_compare($string,$test,$strlen-$testlen,$testlen)===0;}
+function checkport($ip,$port){
+	if(pingport($ip,$port)==1){
+		$prevcheck=apcu_fetch($ip.':'.$port);
+		if($prevcheck>=3)telegram($ip.':'.$port.' online',true);
+		if($prevcheck>0)apcu_store($ip.':'.$port,0);
+	}else{
+		$check=apcu_fetch($ip.':'.$port)+1;
+		if($check>0)apcu_store($ip.':'.$port,$check);
+		if($check==3)telegram($ip.':'.$port.' Offline',true);
+		if($check%120==0)telegram($ip.':'.$port.' nog steeds Offline',true);
+	}
 }
-function checkport($ip,$port){if(pingport($ip,$port)==1){$prevcheck=apcu_fetch($ip.':'.$port);if($prevcheck>=3)telegram($ip.':'.$port.' online',true);if($prevcheck>0)apcu_store($ip.':'.$port,0);}else{$check=apcu_fetch($ip.':'.$port)+1;if($check>0)apcu_store($ip.':'.$port,$check);if($check==3)telegram($ip.':'.$port.' Offline',true);if($check%12==0)telegram($ip.':'.$port.' nog steeds Offline',true);}}
-function pingport($ip,$port){$file=fsockopen($ip,$port,$errno,$errstr,10);$status=0;if(!$file)$status=-1;else{fclose($file);$status=1;}return $status;}
+function pingport($ip,$port){$file=@fsockopen($ip,$port,$errno,$errstr,10);$status=0;if(!$file)$status=-1;else{fclose($file);$status=1;}return $status;}
