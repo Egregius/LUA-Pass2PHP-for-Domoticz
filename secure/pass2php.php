@@ -16,12 +16,12 @@ if($_SERVER['REQUEST_METHOD']=='POST'){
 	$status=$_POST['s'];
 	if(@include '/var/www/html/secure/pass2php/'.$device.'.php'){
 		lg($device.' = '.$status);
-		if(in_array($device,array('brander','badkamervuur'))){
+		if(in_array($device,array('brander','badkamervuur'))){//these devices have a repeated on/off in the scripts. This is to create a second timestamp wich is only updated upon change.
 			$prev=apcu_fetch('s'.$device);
 			if($status!=$prev)apcu_store('tt'.$device,time);
 		}
 		if(apcu_fetch('t'.$device)<time)apcu_store('t'.$device,time);
-		if(in_array($device,array('eettafel','zithoek','kamer','tobi','alex'))){
+		if(in_array($device,array('eettafel','zithoek','kamer','tobi','alex'))){//array of dimmers
 			if($status=='Off')apcu_store('s'.$device,'Off');
 			else apcu_store('s'.$device,filter_var($status,FILTER_SANITIZE_NUMBER_INT));
 		}else apcu_store('s'.$device,$status);
@@ -37,7 +37,7 @@ if(apcu_fetch('cron5')<time-4){
 		apcu_store('cron28800',time);
 		include('/var/www/html/secure/_cron28800.php');
 	}
-	if(apcu_fetch('cron180')<time-136){
+	if(apcu_fetch('cron180')<time-130){
 		apcu_store('cron180',time);
 		include('/var/www/html/secure/_cron180.php');
 	}
