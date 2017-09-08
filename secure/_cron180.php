@@ -1,37 +1,41 @@
 <?php
-if(apcu_exists('sbuiten_temp'))$prevtemp=apcu_fetch('sbuiten_temp');
+if(file_exists('/var/log/cache/sbuiten_temp.cache'))$prevtemp=status('buiten_temp');
 else{
 	$query="SELECT buiten from temp order by stamp desc limit 0,1;";
-	$db=new mysqli('server','user','password','database');
+	$db=new mysqli('server','username','password','database');
 	if($db->connect_errno>0)die('Unable to connect to database ['.$db->connect_error.']');
 	if(!$result=$db->query($query))die('There was an error running the query ['.$query.'-'.$db->error.']');
 	while($row=$result->fetch_assoc())$prevtemp=$row['buiten'];$result->free();
-	telegram('Buitentemp fetched from database: '.$prevtemp);
+	//telegram('Buitentemp fetched from database: '.$prevtemp);
 	$db->close();
 }
-if(apcu_exists('wind'))$prevwind=apcu_fetch('wind');
-if(apcu_exists('buien'))$prevbuien=apcu_fetch('buien');
-if(apcu_exists('wolken'))$prevwolken=apcu_fetch('wolken');
+$prevwind=status('wind');
+$prevbuien=status('buien');
 
-$wu=json_decode(file_get_contents('http://api.wunderground.com/api/a12345bc1234567d/conditions/q/BX/Beitem.json'),true);
+$wu=json_decode(file_get_contents('http://api.wunderground.com/api/1a2b3c4d5e/conditions/q/BX/Beitem.json'),true);
 if(isset($wu['current_observation'])){
-	$lastobservation=apcu_fetch('wu-observation');
+	$lastobservation=status('wu-observation');
 	if(isset($wu['current_observation']['estimated']['estimated']))goto exitwunderground;
 	elseif($wu['current_observation']['observation_epoch']<=$lastobservation)goto exitwunderground;
 	if(isset($wu['current_observation']['temp_c'])){$wutemp=$wu['current_observation']['temp_c'];if($wutemp>$prevtemp+0.5)$wutemp=$prevtemp+0.5;elseif($wutemp<$prevtemp-0.5)$wutemp=$prevtemp-0.5;}
 	if(isset($wu['current_observation']['wind_kph']))$wuwind=$wu['current_observation']['wind_kph'];
 	if(isset($wu['current_observation']['wind_gust_kph']))if($wu['current_observation']['wind_gust_kph']>$wuwind)$wuwind=$wu['current_observation']['wind_gust_kph'];
 	if(isset($wu['current_observation']['precip_1hr_metric']))$wubuien=$wu['current_observation']['precip_1hr_metric']*35;
-	if(isset($wu['current_observation']['wind_dir']))apcu_store('winddir',$wu['current_observation']['wind_dir']);
-	if(isset($wu['current_observation']['icon']))apcu_store('icon',$wu['current_observation']['icon']);
+	if(isset($wu['current_observation']['wind_dir']))setstatus('winddir',$wu['current_observation']['wind_dir']);
+	if(isset($wu['current_observation']['icon']))setstatus('icon',$wu['current_observation']['icon']);
+	if(isset($wuwind))$wuwind=$wuwind / 3.6;
 }
 exitwunderground:
-$maxtemp=10;
-$maxrain=0;
-$ds=json_decode(file_get_contents('https://api.darksky.net/forecast/2a43b9cd64ef79ghi86j329285203310/51.9020861,3.2064103?units=si'),true);
+$maxtemp=1;
+$maxrain=-1;
+$ds=json_decode(file_get_contents('https://api.darksky.net/forecast/1a2b3c4d5e/51.9020861,3.2164103?units=si'),true);
 if(isset($ds['currently'])){
 	if(isset($ds['currently']['temperature'])){$dstemp=$ds['currently']['temperature'];if($dstemp>$prevtemp+0.5)$dstemp=$prevtemp+0.5;elseif($dstemp<$prevtemp-0.5)$dstemp=$prevtemp-0.5;}
-	if(isset($ds['currently']['windSpeed']))$dswind=$ds['currently']['windSpeed'];
+	if(isset($ds['currently']['windSpeed'])){
+		$dswind=$ds['currently']['windSpeed'];
+		if($ds['currently']['windGust']>$dswind)$dswind=$ds['currently']['windGust'];
+	}
+	if(isset($dswind))$dswind=$dswind / 3.6;
 	if(isset($ds['minutely']['data'])){
 		$dsbuien=0;
 		foreach($ds['minutely']['data'] as $i){
@@ -47,8 +51,8 @@ if(isset($ds['currently'])){
 			}
 			if($i['precipIntensity']>$maxrain)$maxrain=$i['precipIntensity'];
 		}
-		apcu_store('maxtemp',$maxtemp);
-		apcu_store('maxrain',$maxrain);
+		setstatus('maxtemp',$maxtemp);
+		setstatus('maxrain',$maxrain);
 	}
 }
 $rains=file_get_contents('http://gadgets.buienradar.nl/data/raintext/?lat=51.89&lon=3.21');
@@ -60,23 +64,27 @@ if(!empty($rains)){
 		if($aantal==7)break;
 	}
 	$newbuien=$totalrain/7;
-	if($newbuien>100)$newbuien=100;
+	if($newbuien>70)$newbuien=70;
 }
 
-if(isset($prevtemp)&&isset($wutemp)&&isset($dstemp))apcu_store('sbuiten_temp',($prevtemp+$wutemp+$dstemp)/3);
-elseif(isset($prevtemp)&&isset($wutemp))apcu_store('sbuiten_temp',($prevtemp+$wutemp)/2);
-elseif(isset($prevtemp)&&isset($dstemp))apcu_store('sbuiten_temp',($prevtemp+$dstemp)/2);
-elseif(isset($wutemp)&&isset($dstemp))apcu_store('sbuiten_temp',($wutemp+$dstemp)/2);
-elseif(isset($wutemp))apcu_store('sbuiten_temp',$wutemp);
-elseif(isset($dstemp))apcu_store('sbuiten_temp',$dstemp);
+if(isset($prevtemp)&&isset($wutemp)&&isset($dstemp))setstatus('buiten_temp',($prevtemp+$wutemp+$dstemp)/3);
+elseif(isset($prevtemp)&&isset($wutemp))setstatus('buiten_temp',($prevtemp+$wutemp)/2);
+elseif(isset($prevtemp)&&isset($dstemp))setstatus('buiten_temp',($prevtemp+$dstemp)/2);
+elseif(isset($wutemp)&&isset($dstemp))setstatus('buiten_temp',($wutemp+$dstemp)/2);
+elseif(isset($wutemp))setstatus('buiten_temp',$wutemp);
+elseif(isset($dstemp))setstatus('buiten_temp',$dstemp);
 
-if(isset($prevwind)&&isset($wuwind)&&isset($dswind))apcu_store('wind',($prevwind+$wuwind+$dswind)/3);
-elseif(isset($prevwind)&&isset($wuwind))apcu_store('wind',($prevwind+$wuwind)/2);
-elseif(isset($prevwind)&&isset($dswind))apcu_store('wind',($prevwind+$dswind)/2);
-elseif(isset($wuwind)&&isset($dswind))apcu_store('wind',($wuwind+$dswind)/2);
-elseif(isset($wuwind))apcu_store('wind',$wuwind);
-elseif(isset($dswind))apcu_store('wind',$dswind);
-
+if(isset($prevwind)&&isset($wuwind)&&isset($dswind))$wind=($prevwind+$wuwind+$dswind)/3;
+elseif(isset($prevwind)&&isset($wuwind))$wind=($prevwind+$wuwind)/2;
+elseif(isset($prevwind)&&isset($dswind))$wind=($prevwind+$dswind)/2;
+elseif(isset($wuwind)&&isset($dswind))$wind=($wuwind+$dswind)/2;
+elseif(isset($wuwind))$wind=$wuwind;
+elseif(isset($dswind))$wind=$dswind;
+if($wind!=$prevwind)setstatus('wind',$wind);
+$windhist=json_decode(status('windhist'));
+$windhist[]=$wind;
+$windhist=array_slice($windhist,-4);
+setstatus('windhist',json_encode($windhist));
 if(isset($prevbuien)&&isset($wubuien)&&isset($dsbuien)&&isset($newbuien))$buien=($prevbuien+$wubuien+$dsbuien+$newbuien)/4;
 elseif(isset($prevbuien)&&isset($wubuien)&&isset($dsbuien))$buien=($prevbuien+$wubuien+$dsbuien)/3;
 elseif(isset($prevbuien)&&isset($wubuien)&&isset($newbuien))$buien=($prevbuien+$wubuien+$newbuien)/3;
@@ -89,7 +97,7 @@ elseif(isset($wubuien))$buien=$wubuien;
 elseif(isset($dsbuien))$buien=$dsbuien;
 $buien=round($buien,0);
 if($buien>100)$buien=100;
-apcu_store('buien',$buien);
+setstatus('buien',$buien);
 if(!isset($wubuien))$wubuien=0;
 if(!isset($dsbuien))$dsbuien=0;
 if(!isset($newbuien))$newbuien=0;
@@ -98,103 +106,217 @@ $db=new mysqli('server','user','password','database');
 if($db->connect_errno>0)die('Unable to connect to database [' . $db->connect_error . ']');
 if(!$result=$db->query($query))die('There was an error running the query ['.$query .' - ' . $db->error . ']');
 $db->close();
-
-if(apcu_fetch('sGroheRed')=='On'){
-	if(apcu_fetch('swasbak')=='Off'&&apcu_fetch('swerkblad')=='Off'&&apcu_fetch('skeuken')=='Off'&&apcu_fetch('skookplaat')=='Off'&&apcu_fetch('tGroheRed')<time-300&&apcu_fetch('sUsage_grohered')<50)sw('GroheRed','Off');
+$buiten_temp=status('buiten_temp');
+$tgrohe=time-timestamp('GroheRed');
+if(status('GroheRed')=='On'){
+	if(status('wasbak')=='Off'&&status('werkblad')=='Off'&&status('keuken')=='Off'&&status('kookplaat')=='Off'&&$tgrohe>240&&status('Usage_grohered')<50)sw('GroheRed','Off');
+	if($tgrohe>900)sw('GroheRed','Off');
 }else{
-	if((apcu_fetch('spirkeuken')=='On'&&apcu_fetch('tpirkeuken')<time-190)||(apcu_fetch('swasbak')=='On'&&apcu_fetch('twasbak')<time-190)||(apcu_fetch('skeuken')=='On'&&apcu_fetch('tkeuken')<time-190)||(apcu_fetch('skookplaat')=='On'&&apcu_fetch('tkookplaat')<time-190))sw('GroheRed','On');
+	if($tgrohe>120&&(status('pirkeuken')=='On'&&timestamp('pirkeuken')<time-190)||(status('wasbak')=='On'&&timestamp('wasbak')<time-190)||(status('keuken')=='On'&&timestamp('keuken')<time-190)||(status('kookplaat')=='On'&&timestamp('kookplaat')<time-190))sw('GroheRed','On');
 }
-if(apcu_fetch('smeldingen')=='On'&&apcu_fetch('tWeg')<time-300){
+if(status('meldingen')=='On'&&timestamp('Weg')<time-300){
 	$items=array('living_temp','badkamer_temp','kamer_temp','tobi_temp','alex_temp','zolder_temp');$avg=0;
-	foreach($items as $item)$avg=$avg+apcu_fetch('s'.$item);$avg=$avg/6;
+	foreach($items as $item)$avg=$avg+status($item);$avg=$avg/6;
 	foreach($items as $item){
-		$temp=apcu_fetch('s'.$item);
+		$temp=status($item);
 		if($temp>$avg+5&&$temp>25){
 			$msg='T '.$item.'='.$temp.'°C. AVG='.round($avg,1).'°C';
-			if(apcu_fetch('alerttemp'.$item)<time-3598){telegram($msg,false,2);ios($msg);apcu_store('alerttemp'.$item,time);}
+			if(timestamp('alerttemp'.$item)<time-3598){telegram($msg,false,2);ios($msg);settimestamp('alerttemp'.$item);}
 		}
-		if(apcu_fetch('t'.$item)<time-43150){if(apcu_fetch('alerttempupd'.$item)<time-43100){telegram($item.' not updated');apcu_store('alerttempupd'.$item,time);}}}
-	$devices=array('tobiZ','alexZ',/*'livingZ','livingZZ',*/'kamerZ');
-	foreach($devices as $device){
-		if(apcu_fetch('t'.$device)<time-2000){if(apcu_fetch('nocom'.$device)<time-43190){telegram($device.' geen communicatie',true);apcu_store('nocom'.$device,time);}}}
-	$buiten_temp=apcu_fetch('sbuiten_temp');
-	if($Weg==0){if(($buiten_temp>apcu_fetch('skamer_temp')&&$buiten_temp>apcu_fetch('stobi_temp')&&$buiten_temp>apcu_fetch('salex_temp'))&&$buiten_temp>22&&(apcu_fetch('skamer_temp')>20||apcu_fetch('stobi_temp')>20||apcu_fetch('salex_temp')>20)&&(apcu_fetch('sraamkamer')=='Open'||apcu_fetch('sraamtobi')=='Open'||apcu_fetch('sraamalex')=='Open'))if((int)apcu_fetch('timeramen')<time-43190){telegram('Ramen boven dicht doen, te warm buiten. Buiten = '.round($buiten_temp,1).',kamer = '.apcu_fetch('skamer_temp').', Tobi = '.apcu_fetch('stobi_temp').', Alex = '.apcu_fetch('salex_temp'),false,2);apcu_store('timeramen',time);}elseif(($buiten_temp<=apcu_fetch('skamer_temp')||$buiten_temp<=apcu_fetch('stobi_temp')||$buiten_temp<=apcu_fetch('salex_temp'))&&(apcu_fetch('skamer_temp')>20||apcu_fetch('stobi_temp')>20||apcu_fetch('salex_temp')>20)&&(apcu_fetch('sraamkamer')=='Closed'||apcu_fetch('sraamkamer')=='Closed'||apcu_fetch('sraamkamer')=='Closed'))if((int)apcu_fetch('timeramen')<time-43190){telegram('Ramen boven open doen, te warm binnen. Buiten = '.round($buiten_temp,1).',kamer = '.apcu_fetch('skamer_temp').', Tobi = '.apcu_fetch('stobi_temp').', Alex = '.apcu_fetch('salex_temp'),false,2);apcu_store('timeramen',time);}}
-
-}
-if(apcu_fetch('svoordeur')=='On'&&apcu_fetch('tvoordeur')<time-598)sw('voordeur','Off');
-$nodes=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=openzwavenodes&idx=3'),true);
-if($nodes['NodesQueried']==1){
-	$timehealnetwork=apcu_fetch('healnetwork');
-	if($timehealnetwork<time-3600*24*2){
-		$result=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=command&param=zwavenetworkheal&idx=3'),true);
-		if($result['status']=="OK"){
-			apcu_store('healnetwork',time);
-			exit;
+		if(timestamp($item)<time-43150){if(timestamp('alerttempupd'.$item)<time-43100){telegram($item.' not updated');settimestamp('alerttempupd'.$item);}}}
+	$devices=array(/*'tobiZ',*/'alexZ',/*'livingZ','livingZZ',*/'kamerZ');
+	foreach($devices as $device){if(timestamp($device)<time-2000){
+		if(timestamp('nocom'.$device)<time-43190){
+			telegram($device.' geen communicatie',true);
+			settimestamp('nocom'.$device);}
 		}
 	}
-	$kamers=array('living','tobi','alex','kamer');
-	foreach($kamers as $kamer)${'dif'.$kamer}=number_format(apcu_fetch('s'.$kamer.'_temp')-apcu_fetch('s'.$kamer.'_set'),1);
-	foreach($nodes['result'] as $node){
-		if(in_array($node['NodeID'],array(2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,18,19,20,22,23,25,26,27,29))){
-			if($timehealnetwork<time-1800&&apcu_fetch('healnode-'.$node['Name'])<time-3600*24*7&&apcu_fetch('healnode')<time-300){
-				$healnode=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=command&param=zwavenodeheal&idx=3&node='.$node['NodeID']),true);
-				if($healnode['status']=="OK"){
-					apcu_store('healnode',time);
-					//lg('     Heal Node '.$node['Name'].' started');
-					apcu_store('healnode-'.$node['Name'],time);
-					exit;
+	if($Weg==0){if(($buiten_temp>status('kamer_temp')&&$buiten_temp>status('tobi_temp')&&$buiten_temp>status('alex_temp'))&&$buiten_temp>22&&(status('kamer_temp')>20||status('tobi_temp')>20||status('alex_temp')>20)&&(status('raamkamer')=='Open'||status('raamtobi')=='Open'||status('raamalex')=='Open'))if((int)timestamp('timeramen')<time-43190){telegram('Ramen boven dicht doen, te warm buiten. Buiten = '.round($buiten_temp,1).',kamer = '.status('kamer_temp').', Tobi = '.status('tobi_temp').', Alex = '.status('alex_temp'),false,2);settimestamp('timeramen');}
+	elseif(($buiten_temp<=status('kamer_temp')||$buiten_temp<=status('tobi_temp')||$buiten_temp<=status('alex_temp'))&&(status('kamer_temp')>20||status('tobi_temp')>20||status('alex_temp')>20)&&(status('raamkamer')=='Closed'||status('raamkamer')=='Closed'||status('raamkamer')=='Closed'))if((int)timestamp('timeramen')<time-43190){telegram('Ramen boven open doen, te warm binnen. Buiten = '.round($buiten_temp,1).',kamer = '.status('kamer_temp').', Tobi = '.status('tobi_temp').', Alex = '.status('alex_temp'),false,2);settimestamp('timeramen');}}
+
+}
+if(status('voordeur')=='On'&&timestamp('voordeur')<time-598)sw('voordeur','Off');
+if($Weg==2){
+	$uit=600;
+	$items=array('pirgarage','pirkeuken','pirliving','pirinkom','pirhall');
+	foreach($items as $item)if(status($item)!='Off')ud($item,0,'Off');
+	$items=array('garage','denon','bureel','tv','tvled','kristal','eettafel','zithoek','terras','tuin','voordeur','hall','inkom','keuken','werkblad','wasbak','kookplaat','sony','kamer','tobi','alex','lichtbadkamer1','lichtbadkamer2','badkamervuur');
+	foreach($items as $item)if(status($item)!='Off')if(timestamp($item)<time-$uit)sw($item,'Off');
+	$items=array('living','badkamer','kamer','tobi','alex');
+	foreach($items as $item){${'setpoint'.$item}=status('setpoint'.$item);if(${'setpoint'.$item}!=0&&timestamp($item)<time-21600)setstatus('setpoint'.$item,0);}
+	$items=array('tobi','living','kamer','alex');
+}elseif($Weg==1){
+	$uit=600;
+	$items=array('pirgarage','pirkeuken','pirliving','pirinkom');
+	foreach($items as $item)if(status($item)!='Off')ud($item,0,'Off');
+	$items=array('hall','bureel','denon','tv','tvled','kristal','eettafel','zithoek','garage','terras','tuin','voordeur','keuken','werkblad','wasbak','kookplaat','zolderg','dampkap');
+	foreach($items as $item)if(status($item)!='Off')if(timestamp($item)<time-$uit)sw($item,'Off');
+	$items=array('living','badkamer','kamer','tobi','alex');
+	foreach($items as $item){${'setpoint'.$item}=status('setpoint'.$item);if(${'setpoint'.$item}!=0&&timestamp($item)<time-21600)setstatus('setpoint'.$item,0);}
+	$items=array('tobi','living','kamer','alex');
+}elseif($Weg==0){
+	$uit=900;
+	if(status('pirkeuken')=='Off'){
+		if(timestamp('pirkeuken')<time-900){
+			$items=array('keuken','wasbak','kookplaat','werkblad');
+			foreach($items as $item)if(status($item)!='Off')if(timestamp($item)<time-$uit)sw($item,'Off');
+		}
+	}
+	if(status('pirliving')=='Off'){
+		$tpirliving=timestamp('pirliving');
+		if($tpirliving<time-7200){
+			$items=array('eettafel','zithoek','bureel');
+			foreach($items as $item)if(status($item)!='Off')if(timestamp($item)<time-$uit)sw($item,'Off');
+		}
+		if($tpirliving<time-9000){
+			$items=array('tvled','kristal');
+			foreach($items as $item)if(status($item)!='Off')if(timestamp($item)<time-$uit)sw($item,'Off');
+		}
+		if($tpirliving<time-10800){
+			ud('miniliving4l',1,'On');
+		}
+	}
+	$tdeurbadkamer=time-timestamp('deurbadkamer');
+	if($tdeurbadkamer>7200){
+		if(status('lichtbadkamer1')!='Off')sw('lichtbadkamer1','Off');
+		if(status('lichtbadkamer2')!='Off')sw('lichtbadkamer2','Off');
+	}
+	if(status('tv')=='On'){
+		if($zon<50){
+			if(status('tvled')=='Off'){
+				if(timestamp('tvled')<time-14400)sw('tvled','On');
+			}else{
+				if($zon<20){
+					if(status('kristal')=='Off'){
+						if(timestamp('kristal')<time-14400)sw('kristal','On');
+					}
 				}
-				unset($healnode);
 			}
 		}
-		/*if($node['Product_name']=='Z Thermostat 014G0013'){if(is_array($node['config'])){$confs=$node['config'];foreach($confs as $conf){if($conf['label']=='Wake-up Interval'){
-			if($node['Name']=='LivingZ'){$Uwake=1200;if(time>=strtotime('17:00'))$Uwake=480;if($difliving<1)$Uwake=240;if($conf['value']!=$Uwake&&time>apcu_fetch('UwakeLivingZ')){$result=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=command&param=applyzwavenodeconfig&idx='.$node['idx'].'&valuelist=2000_'.base64_encode($Uwake).'_3001_VW5wcm90ZWN0ZWQ=_'),true);if($result['status']=='OK')apcu_store('UwakeLivingZ',time+$conf['value']);lg(' Update Wakeupinterval for '.$node['Name'].' from '.$conf['value'].' to '.$Uwake.'. difliving='.$difliving);}}
-			elseif($node['Name']=='LivingZE'){$Uwake=1200;if(time>=strtotime('17:00'))$Uwake=480;if($difliving<1)$Uwake=240;if($conf['value']!=$Uwake&&time>apcu_fetch('UwakeLivingZE')){$result=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=command&param=applyzwavenodeconfig&idx='.$node['idx'].'&valuelist=2000_'.base64_encode($Uwake).'_3001_VW5wcm90ZWN0ZWQ=_'),true);if($result['status']=='OK')apcu_store('UwakeLivingZE',time+$conf['value']);lg(' Update Wakeupinterval for '.$node['Name'].' from '.$conf['value'].' to '.$Uwake.'. difliving='.$difliving);}}
-			elseif($node['Name']=='LivingZZ'){$Uwake=1200;if(time>=strtotime('17:00'))$Uwake=480;if($difliving<1)$Uwake=240;if($conf['value']!=$Uwake&&time>apcu_fetch('UwakeLivingZZ')){$result=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=command&param=applyzwavenodeconfig&idx='.$node['idx'].'&valuelist=2000_'.base64_encode($Uwake).'_3001_VW5wcm90ZWN0ZWQ=_'),true);if($result['status']=='OK')apcu_store('UwakeLivingZZ',time+$conf['value']);lg(' Update Wakeupinterval for '.$node['Name'].' from '.$conf['value'].' to '.$Uwake.'. difliving='.$difliving);}}
-			elseif($node['Name']=="KamerZ"){$Uwake=1200;if(time<strtotime('5:00')||time>strtotime('20:00'))$Uwake=600;if($difkamer<1)$Uwake=300;if($conf['value']!=$Uwake&&time>apcu_fetch('UwakeKamerZ')){$result=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=command&param=applyzwavenodeconfig&idx='.$node['idx'].'&valuelist=2000_'.base64_encode($Uwake).'_3001_VW5wcm90ZWN0ZWQ=_'),true);if($result['status']=='OK')apcu_store('UwakeKamerZ',time+$conf['value']);lg(' Update Wakeupinterval for '.$node['Name'].' from '.$conf['value'].' to '.$Uwake.'. difkamer='.$difkamer);}}
-			elseif($node['Name']=="TobiZ"){$Uwake=1200;if($s['heating']=='On'){if(date('W')%2==1){if(date('N')==3){if(time>strtotime('20:00'))$Uwake=600;}elseif(date('N')==4){if(time<strtotime('5:00')||time>strtotime('20:00'))$Uwake=600;}elseif(date('N')==5){if(time<strtotime('5:00'))$Uwake=600;}}else{if(date('N')==3){if(time>strtotime('20:00'))$Uwake=600;}elseif(in_array(date('N'),array(4,5,6))){if(time<strtotime('5:00')||time>strtotime('20:00'))$Uwake=600;}elseif(date('N')==7){if(time<strtotime('5:00'))$Uwake=600;}}}if($diftobi<1)$Uwake=240;if($conf['value']!=$Uwake&&time>apcu_fetch('UwakeTobiZ')){$result=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=command&param=applyzwavenodeconfig&idx='.$node['idx'].'&valuelist=2000_'.base64_encode($Uwake).'_3001_VW5wcm90ZWN0ZWQ=_'),true);if($result['status']=='OK')apcu_store('UwakeTobiZ',time+$conf['value']);lg(' Update Wakeupinterval for '.$node['Name'].' from '.$conf['value'].' to '.$Uwake.'. diftobi='.$diftobi);}}
-			elseif($node['Name']=="AlexZ"){$Uwake=1200;if(time<strtotime('5:00')||time>strtotime('18:00'))$Uwake=600;if($difalex<1)$Uwake=240;if($conf['value']!=$Uwake&&time>apcu_fetch('UwakeAlexZ')){$result=json_decode(file_get_contents('http://127.0.0.1:8080/json.htm?type=command&param=applyzwavenodeconfig&idx='.$node['idx'].'&valuelist=2000_'.base64_encode($Uwake).'_3001_VW5wcm90ZWN0ZWQ=_'),true);if($result['status']=='OK')apcu_store('UwakeAlexZ',time+$conf['value']);lg(' Update Wakeupinterval for '.$node['Name'].' from '.$conf['value'].' to '.$Uwake.'. difalex='.$difalex);}}
-		}*/
-
-		unset($confs,$conf);
 	}
-//}}}
-}else{
-	apcu_store('healnetwork',0);
-	$items=array('Media','Eettafel','Zithoek','Keuken','WasbakKookplaat','InkomVoordeur','BadkamerVuur','Kamer','Badkamer','Tobi','Zoldertrap','HallZolder','GarageTerras','Alex','GroheRed','Water','BureelTobi','Brander','Sony','TuinPomp','FilterWarmtepomp','PoortRF','Sirene','Kerstboom');
-	foreach($items as $item)apcu_store('healnode-'.$item,0);
 }
-if(apcu_fetch('skodi')=='On'){if(pingport('192.168.2.7',1597)==1){$prevcheck=apcu_fetch('check192.168.2.57:1597');if($prevcheck>0)apcu_store('check192.168.2.57:1597',0);}else{$check=apcu_fetch('check192.168.2.57:1597')+1;if($check>0)apcu_store('check192.168.2.57:1597',$check);if($check>=5)sw(apcu_fetch('ikodi'),'Off','kodi');}}
+
+if(status('kodi')=='On'){
+	if(pingport('192.168.2.7',1597)==1){
+		$prevcheck=status('check192.168.2.7:1597');
+		if($prevcheck>0)setstatus('check192.168.2.7:1597',0);
+	}else{
+		$check=status('check192.168.2.7:1597')+1;
+		if($check>0)setstatus('check192.168.2.7:1597',$check);
+		if($check>=5)sw('kodi','Off');
+	}
+}
+
+$item='diepvries_temp';
+if(timestamp(''.$item)<time-7200){if(timestamp('alerttempupd'.$item)<time-7200){telegram($item.' not updated');settimestamp('alerttempupd'.$item);}}
 
 checkport('192.168.2.11',80);checkport('192.168.2.12',80);checkport('192.168.2.13',80);checkport('192.168.2.2',53);checkport('192.168.2.2',80);checkport($smappeeip,80);
-if(!$auto)if(apcu_fetch('tlichten_auto')<time-10795)sw('lichten_auto','On');
-if(!$meldingen&&apcu_fetch('tmeldingen')<time-10795)sw('meldingen','On');
-if(apcu_fetch('tpirliving')<time-14395&&apcu_fetch('tpirgarage')<time-14395&&apcu_fetch('tpirinkom')<time-14395&&apcu_fetch('tpirhall')<time-14395&&apcu_fetch('tWeg')<time-14395&&$Weg==0){apcu_store('Weg',1);apcu_store('tWeg',time);telegram('Slapen ingeschakeld na 4 uur geen beweging',false,2);}
-if(apcu_fetch('tpirliving')<time-43190&&apcu_fetch('tpirgarage')<time-43190&&apcu_fetch('tpirinkom')<time-43190&&apcu_fetch('tpirhall')<time-43190&&apcu_fetch('tWeg')<time-43190&&$Weg==1){apcu_store('Weg',2);apcu_store('tWeg',time);telegram('Weg ingeschakeld na 12 uur geen beweging',false,2);}
+if(!$auto)if(timestamp('lichten_auto')<time-10795)sw('lichten_auto','On');
+if(!$meldingen&&timestamp('meldingen')<time-10795)sw('meldingen','On');
+if(timestamp('pirliving')<time-14395&&timestamp('pirgarage')<time-14395&&timestamp('pirinkom')<time-14395&&timestamp('pirhall')<time-14395&&timestamp('Weg')<time-14395&&$Weg==0){setstatus('Weg',1);telegram('Slapen ingeschakeld na 4 uur geen beweging',false,2);}
+if(timestamp('pirliving')<time-43190&&timestamp('pirgarage')<time-43190&&timestamp('pirinkom')<time-43190&&timestamp('pirhall')<time-43190&&timestamp('Weg')<time-43190&&$Weg==1){setstatus('Weg',2);telegram('Weg ingeschakeld na 12 uur geen beweging',false,2);}
 
-$items=array(5=>'keukenzolderg',6=>'wasbakkookplaat',7=>'werkbladtuin',8=>'inkomvoordeur',11=>'badkamer');
-foreach($items as $item => $name)if(apcu_fetch('refresh'.$item)<time-7198&&apcu_fetch('healnode')<time-900){RefreshZwave($item,'time',$name);break;}
+$items=array(4=>'keukenzolderg',6=>'wasbakkookplaat',7=>'werkblad',20=>'inkomvoordeur',11=>'badkamer',60=>'diepvries');
+foreach($items as $item => $name)if(timestamp('refresh'.$item)<time-7198&&timestamp('healnode')<time-900){RefreshZwave($item,'time',$name);break;}
 
-if(time>strtotime('0:00')&&time<strtotime('0:05')){
-	apcu_store('power_min',140);
-	apcu_store('power_max',6000);
-}
-if(apcu_fetch('swater')=='On'){
-	if(apcu_fetch('twater')<time-1800)double('water','Off');
+if(status('water')=='On'){
+	if(time>=strtotime('21:30')){if(timestamp('water')<time-1200)double('water','Off');}
+	else{if(timestamp('water')<time-1800)double('water','Off');}
 }else{
-	if($maxrain==0){
-		if(time>=strtotime('22:00')&&time<strtotime('22:10')){
+	if(time>=strtotime('21:30')&&$zon==0){
+		if(timestamp('regencheck')<time-82800){
 			$stamp=strftime("%G-%m-%d %k:%M:%S",time-3600*48);
-			$query="select SUM(`buien`) as buien from regen where stamp > '$STAMP';";
+			$query="select SUM(`buien`) as buien from regen where stamp > '$stamp';";
 			$db=new mysqli('server','user','password','database');
 			if($db->connect_errno>0)die('Unable to connect to database ['.$db->connect_error.']');
 			if(!$result=$db->query($query))die('There was an error running the query ['.$query.'-'.$db->error.']');
-			while($row=$result->fetch_assoc())$rainpast=$row['buien'];$result->free();$db->close();
-			if($rainpast==0){
+			while($row=$result->fetch_assoc())$rainpast=$row['buien'];$msg=print_r($row,True);$result->free();$db->close();
+			settimestamp('regencheck');
+			if($rainpast<2000&&$maxrain<0.5){
 				sw('water','On');
-				telegram('Automatisch tuin water geven gestart');
+				$msg="Regen check:__Laatste 48u: $rainpast __Volgende 48u: $maxrain";
+				$msg.='__Automatisch tuin water geven gestart.';
+				telegram($msg);
 			}
 		}
 	}
 }
-//if($s['zwembadfilter']=='On'){if(apcu_fetch('tzwembadfilter') < time-14395&&time>strtotime("18:00")&&$s['zwembadwarmte']=='Off')sw('zwembadfilter','Off');}else{if(apcu_fetch('tzwembadfilter')<time-14395&&time>strtotime("12:00")&&time<strtotime("16:00"))sw('zwembadfilter','On');}if($s['zwembadwarmte']=='On'){if(apcu_fetch('tzwembadwarmte')<time-86398)sw('zwembadwarmte','Off');if($s['zwembadfilter']=='Off')sw('zwembadfilter','On');}
+if(time>=strtotime('23:55')){
+	if(status('nas')!='On'){
+		$aantal=file_get_contents('https://films.egregius.be/query.php?user=nas');
+		if($aantal>0)shell_exec('/home/pi/wakenas.sh');
+	}
+}
+$zwembadfilter=status('zwembadfilter');
+$zwembadwarmte=status('zwembadwarmte');
+if($zwembadfilter=='On'){
+	if(timestamp('zwembadfilter')<time-10700&&time>strtotime("16:00")&&$zwembadwarmte=='Off')sw('zwembadfilter','Off');
+}else{
+	if((timestamp('zwembadfilter')<time-10700&&time>strtotime("13:00")&&time<strtotime("16:00"))||(timestamp('zwembadfilter')<time-10700&&time>strtotime("11:00")&&time<strtotime("19:00")&&$buiten_temp>28))sw('zwembadfilter','On');
+}
+if($zwembadwarmte=='On'){
+	if(timestamp('zwembadwarmte')<time-86398)sw('zwembadwarmte','Off');
+	if($zwembadfilter=='Off')sw('zwembadfilter','On');
+}
+if(status('kodi')=='On'&&timestamp('kodi')<time-300){
+	$ctx=stream_context_create(array('http'=>array('timeout' => 5)));
+	if($Weg>0)file_get_contents('http://192.168.2.7:1597/jsonrpc?request={"jsonrpc":"2.0","id":1,"method":"System.Shutdown"}',false,$ctx);
+	if(timestamp('kodi')<time-298){if(pingport('192.168.2.7',1597)==1){$prevcheck=status('check192.168.2.57:1597');if($prevcheck>0)setstatus('check192.168.2.57:1597',0);}else{$check=status('check192.168.2.57:1597')+1;if($check>0)setstatus('check192.168.2.57:1597',$check);if($check>=5)sw('kodi','Off');}}
+}
+if($auto){
+	$regenpomp=status('regenpomp');
+	$Tregenpomp=timestamp('regenpomp');
+	if($buien>0){
+		$pomppauze=21600/$buien;
+		if($pomppauze>21600)$pomppauze=21600;
+		elseif($pomppauze<300)$pomppauze=300;
+	}else $pomppauze=86400;
+	if($regenpomp=='On'&&$Tregenpomp<time-57)sw('regenpomp','Off','was on for '.convertToHours(time-$Tregenpomp));
+	elseif($regenpomp=='Off'&&$Tregenpomp<time-$pomppauze)sw('regenpomp','On','was off for '.convertToHours(time-$Tregenpomp));
+
+	$zonopen=2000;
+	$luifel=100-status('luifel');
+	$maxbuien=5;
+	$sliving_temp=status('living_temp');
+	$x=0;foreach($windhist as $y)$x=$y+$x;$windhist=$x/count($windhist);
+	if	  ($wind>=4.5)$maxluifel=0;
+	elseif($wind>=4.0)$maxluifel=20;
+	elseif($wind>=3.5)$maxluifel=28;
+	elseif($wind>=3.0)$maxluifel=36;
+	elseif($wind>=2.5)$maxluifel=44;
+	else $maxluifel=52;
+	$dir=status('winddir');
+	if($dir=='East')$maxluifel=round($maxluifel*0.8,0);
+	elseif($dir=='East')$maxluifel=round($maxluifel*0.8,0);
+	$wind=round($wind,1);
+	$luifelauto=status('dimactionluifel');//0=manueel,1=auto
+	$tluifel=time-timestamp('luifel');
+	if($luifelauto==0){
+		if($tluifel>3600&&$maxluifel<30){setstatus('dimactionluifel',1);$luifelauto=1;}
+		elseif($tluifel>28800){setstatus('dimactionluifel',1);$luifelauto=1;}
+	}
+	if($luifel>$maxluifel&&$luifelauto==1){
+		if($maxluifel==0)sl('luifel',100);else sl('luifel',((100-$maxluifel)+1));
+		//telegram("1 Luifel ".$maxluifel." dicht: __buien=$buien __wind=$wind $dir__zon:$zon __living:$sliving_temp __Tluifel=$tluifel");
+	}elseif($maxluifel==0&&$luifelauto==0&&$luifel>0){
+		sl('luifel',100);
+		//telegram("2 Luifel volledig dicht: __buien=$buien __wind=$wind $dir __zon:$zon __living:$sliving_temp __Tluifel=$tluifel");
+	}elseif($luifel<$maxluifel&&$buien<$maxbuien&&$sliving_temp>=22&&$zon>$zonopen&&$luifelauto==1&&$tluifel>600&&$wind<$windhist&&time>strtotime("10:00")){
+		sl('luifel',((100-$maxluifel)+1));
+		//telegram("3 Luifel ".$maxluifel." open: __buien=$buien __wind=$wind $dir__zon:$zon __living:$sliving_temp __Tluifel=$tluifel");
+	}elseif(($buien>$maxbuien||(($zon==0||$sliving_temp<22)&&$luifelauto==1))&&$luifel!=0){
+		sl('luifel',100);
+		//telegram('4 Luifel');
+	}
+}
+if($zon>0){
+	$zonvandaag=file_get_contents('https://egregius.be/zon/vandaag.php');
+	if($zonvandaag>0)setstatus('zonvandaag',round($zonvandaag,1));
+}else{
+	if(time<strtotime("0:10"))setstatus('zonvandaag',0);
+}
+include('gcal/gcal.php');
+function roundUpToAny($n,$x=5){
+    return (ceil($n)%$x===0)?ceil($n):round(($n+$x/2)/$x)*$x;
+}
+?>
