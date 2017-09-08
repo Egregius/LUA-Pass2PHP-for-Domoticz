@@ -1,27 +1,27 @@
 <?php
 $kamers=array('living','tobi','alex','kamer','frigo');
 foreach($kamers as $kamer){
-	${$kamer.'_temp'}=apcu_fetch('s'.$kamer.'_temp');
-	${$kamer.'_set'}=apcu_fetch('s'.$kamer.'_set');
+	${$kamer.'_temp'}=status($kamer.'_temp');
+	${$kamer.'_set'}=status($kamer.'_set');
 }
 $items=array('livingZ','kamerZ','tobiZ','alexZ');
-foreach($items as $item)${$item}=apcu_fetch('s'.$item);
-$heating=apcu_fetch('sheating');
-$manual=apcu_fetch('sheatingmanual');
-$brander=apcu_fetch('sbrander');
-$branderac=apcu_fetch('sbranderac');
-$buiten_temp=apcu_fetch('buiten_temp');
-$maxtemp=apcu_fetch('maxtemp');
-$timebrander=time-apcu_fetch('ttbrander');
-$timebranderac=time-apcu_fetch('tbranderac');
-$licht=apcu_fetch('slichtbadkamer1');
+foreach($items as $item)${$item}=status($item);
+$heating=status('heating');
+$manual=status('heatingmanual');
+$brander=status('brander');
+$branderac=status('branderac');
+$buiten_temp=status('buiten_temp');
+$maxtemp=status('maxtemp');
+$timebrander=time-timestamp('tbrander');
+$timebranderac=time-timestamp('branderac');
+$licht=status('lichtbadkamer1');
 
 $tobithuis=false;
 $Setkamer=4;
-$setpointkamer=apcu_fetch('setpointkamer');
-if($setpointkamer!=0&&apcu_fetch('tkamer_set')<time-21600){apcu_store('setpointkamer',0);$setpointkamer=0;}
+$setpointkamer=status('setpointkamer');
+if($setpointkamer!=0&&timestamp('kamer_set')<time-21600){setstatus('setpointkamer',0);$setpointkamer=0;}
 if($setpointkamer!=2){
-	if($buiten_temp<10&&$maxtemp<15 /*&&apcu_fetch('sraamkamer')=='Closed'*/ &&apcu_fetch('sheating')=='On'/*&&(apcu_fetch('traamkamer')<time-7198||time>strtotime('19:00'))*/){
+	if($buiten_temp<10&&$maxtemp<15 /*&&status('raamkamer')=='Closed'*/ &&$heating=='On'/*&&(timestamp('raamkamer')<time-7198||time>strtotime('19:00'))*/){
 		//$Setkamer=8.0;
 		if(time<strtotime('5:00'))$Setkamer=16;
 		elseif(time>strtotime('22:00'))$Setkamer=16;
@@ -39,10 +39,10 @@ if($setpointkamer!=2){
 }
 
 $Settobi=4;
-$setpointtobi=apcu_fetch('setpointtobi');
-if($setpointtobi!=0&&apcu_fetch('ttobi_set')<time-21600){apcu_store('setpointtobi',0);$setpointtobi=0;}
+$setpointtobi=status('setpointtobi');
+if($setpointtobi!=0&&timestamp('tobi_set')<time-21600){setstatus('setpointtobi',0);$setpointtobi=0;}
 if($setpointtobi!=2){
-	if($buiten_temp<14&&$maxtemp<15&&apcu_fetch('sraamtobi')=='Closed'&&$heating=='On'&&(apcu_fetch('traamtobi')<time-7198||time>strtotime('19:10'))){
+	if($buiten_temp<14&&$maxtemp<15&&status('raamtobi')=='Closed'&&$heating=='On'&&(timestamp('raamtobi')<time-7198||time>strtotime('19:10'))){
 		//$Settobi=8.0;
 		if(date('W')%2==1){
 			if(date('N')==3){if(time>strtotime('19:10'))$Settobi=16;$tobithuis=true;}
@@ -58,10 +58,10 @@ if($setpointtobi!=2){
 	if($tobi_set!=$Settobi){ud('tobi_set',0,$Settobi);$tobi_set=$Settobi;}}
 
 $Setalex=4;
-$setpointalex=apcu_fetch('setpointalex');
-if($setpointalex!=0&&apcu_fetch('talex_set')<time-21600){apcu_store('setpointalex',0);$setpointalex=0;}
+$setpointalex=status('setpointalex');
+if($setpointalex!=0&&timestamp('alex_set')<time-21600){setstatus('setpointalex',0);$setpointalex=0;}
 if($setpointalex!=2){
-	if($buiten_temp<16&&$maxtemp<15&&apcu_fetch('sraamalex')=='Closed'&&$heating=='On'&&(apcu_fetch('traamalex')<time-1800||time>strtotime('19:00'))){
+	if($buiten_temp<16&&$maxtemp<15&&status('raamalex')=='Closed'&&$heating=='On'&&(timestamp('raamalex')<time-1800||time>strtotime('19:00'))){
 		//$Setalex=8;
 		if(time<strtotime('5:00')||time>strtotime('19:00'))$Setalex=15.0;
 	}
@@ -69,10 +69,10 @@ if($setpointalex!=2){
 }
 
 $Setliving=14;
-$setpointliving=apcu_fetch('setpointliving');
-if($setpointliving!=0&&apcu_fetch('tliving_set')<time-21600){apcu_store('setpointliving',0);$setpointliving=0;}
+$setpointliving=status('setpointliving');
+if($setpointliving!=0&&timestamp('living_set')<time-21600){setstatus('setpointliving',0);$setpointliving=0;}
 if($setpointliving!=2){
-	if($buiten_temp<20&&$maxtemp<20&&$heating=='On'&&apcu_fetch('sraamliving')=='Closed'){
+	if($buiten_temp<20&&$maxtemp<20&&$heating=='On'&&status('raamliving')=='Closed'){
 		$Setliving=17;
 		if(time>=strtotime('5:00')&&time<strtotime('5:30'))$Weg>0?$Setliving=17.0:$Setliving=20.0;
 		elseif(time>=strtotime('5:30')&&time<strtotime('6:00'))$Weg>0?$Setliving=17.5:$Setliving=20.0;
@@ -101,12 +101,12 @@ foreach($kamers as $kamer){
 foreach($kamers as $kamer){
 	if(${'dif'.$kamer}<=number_format(($bigdif+ 0.2),1)&&${'dif'.$kamer}<=0.2)${'RSet'.$kamer}=setradiator($kamer,${'dif'.$kamer},true,${$kamer.'_set'});
 	else ${'RSet'.$kamer}=setradiator($kamer,${'dif'.$kamer},false,${$kamer.'_set'});
-	if(time>=strtotime('16:00')&&${'RSet'.$kamer}<16&&apcu_fetch('raam'.$kamer)!='Open'){
+	if(time>=strtotime('16:00')&&${'RSet'.$kamer}<16&&status('raam'.$kamer)!='Open'){
 		if($kamer!='tobi')${'RSet'.$kamer}=16.0;
 		elseif($kamer=='tobi'&&$tobithuis)${'RSet'.$kamer}=16.0;
 	}
-	if(round(${$kamer.'Z'},1)!=round(${'RSet'.$kamer},1)/*&&apcu_fetch('tset'.$kamer.'Z')<time-300*/){
-		apcu_store('tset'.$kamer.'Z',time);
+	if(round(${$kamer.'Z'},1)!=round(${'RSet'.$kamer},1)/*&&timestamp('set'.$kamer.'Z')<time-300*/){
+		settimestamp('tset'.$kamer.'Z',time);
 		print strftime("%Y-%m-%d %H:%M:%S",time()).'   => Danfoss KamerZ was '.${$kamer.'Z'}.',nieuw='.${'RSet'.$kamer}.PHP_EOL;
 		ud($kamer.'Z',0,${'RSet'.$kamer});
 	}
@@ -133,7 +133,7 @@ elseif($bigdif>=-0.6&&$brander=="On"&&$timebrander>600)sw('brander','Off','brand
 
 if($manual=='On'){
 	if($Weg==2){
-		if($heating=='On'&&apcu_fetch('theating')<time-3598)sw('heating','Off');
+		if($heating=='On'&&timestamp('heating')<time-3598)sw('heating','Off');
 	}else{
 		if($heating!='On')sw('heating','On');
 	}
@@ -147,15 +147,15 @@ function setradiator($name,$dif,$koudst=false,$set){
 }
 
 $wantedbadkamer=21.8;
-$badkamer_set=apcu_fetch('sbadkamer_set');
-if(!isset($deurbadkamer))$deurbadkamer=apcu_fetch('sdeurbadkamer');
-$timebadkvuur=time-apcu_fetch('ttbadkamervuur');
+$badkamer_set=status('badkamer_set');
+if(!isset($deurbadkamer))$deurbadkamer=status('deurbadkamer');
+$timebadkvuur=time-timestamp('tbadkamervuur');
 
-if($deurbadkamer=="Open"&&$badkamer_set!=10&&(apcu_fetch('tdeurbadkamer')<time-57||$licht=='Off')){
+if($deurbadkamer=="Open"&&$badkamer_set!=10&&(timestamp('deurbadkamer')<time-57||$licht=='Off')){
 	ud('badkamer_set',0,10);
 	$badkamer_set=10.0;
 }elseif($deurbadkamer!="Open"){
-	if($buiten_temp<21&&$licht=='On'&&apcu_fetch('sbadkamer_set')!=$wantedbadkamer&&((time>strtotime('5:00')&&time<strtotime('10:00'))||$timebadkvuur<900)){
+	if($buiten_temp<21&&$licht=='On'&&status('badkamer_set')!=$wantedbadkamer&&((time>strtotime('5:00')&&time<strtotime('10:00'))||$timebadkvuur<900)){
 		ud('badkamer_set',0,$wantedbadkamer);
 		$badkamer_set=$wantedbadkamer;
 	}elseif($licht=='Off'&&$badkamer_set!=10){
@@ -164,8 +164,8 @@ if($deurbadkamer=="Open"&&$badkamer_set!=10&&(apcu_fetch('tdeurbadkamer')<time-5
 	}
 }
 
-$difbadkamer=number_format(apcu_fetch('sbadkamer_temp')-$badkamer_set,1);
-$sbadkamervuur=apcu_fetch('sbadkamervuur');
+$difbadkamer=number_format(status('badkamer_temp')-$badkamer_set,1);
+$sbadkamervuur=status('badkamervuur');
 
 	if($difbadkamer<=-0.2&&$sbadkamervuur=="Off"&&$timebadkvuur>180)double('badkamervuur','On','badkamervuur1 dif = '.$difbadkamer.' was off for '.convertToHours($timebadkvuur));
 elseif($difbadkamer<=-0.1&&$sbadkamervuur=="Off"&&$timebadkvuur>240)double('badkamervuur','On','badkamervuur2 dif = '.$difbadkamer.' was off for '.convertToHours($timebadkvuur));
@@ -173,3 +173,4 @@ elseif($difbadkamer<= 0  &&$sbadkamervuur=="Off"&&$timebadkvuur>360)double('badk
 elseif($difbadkamer>= 0  &&$sbadkamervuur=="On"&&$timebadkvuur>30)	double('badkamervuur','Off','badkamervuur4 dif = '.$difbadkamer.' was on for '.convertToHours($timebadkvuur));
 elseif($difbadkamer>=-0.2&&$sbadkamervuur=="On"&&$timebadkvuur>120)	double('badkamervuur','Off','badkamervuur5 dif = '.$difbadkamer.' was on for '.convertToHours($timebadkvuur));
 elseif($difbadkamer>=-0.4&&$sbadkamervuur=="On"&&$timebadkvuur>180)	double('badkamervuur','Off','badkamervuur6 dif = '.$difbadkamer.' was on for '.convertToHours($timebadkvuur));
+?>
