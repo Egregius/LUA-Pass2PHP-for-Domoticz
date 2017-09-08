@@ -1,2 +1,3 @@
 <?php
-echo apcu_fetch('cron5');
+echo timestamp('cron5');
+?>
