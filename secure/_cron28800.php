@@ -9,7 +9,7 @@ while($row = $result->fetch_assoc()){
 }
 $result->free();
 $date=strftime("%F",time);
-$xml=json_decode(json_encode(simplexml_load_string(file_get_contents('/home/pi/domoticz/Config/zwcfg_0xe9238f6e.xml'),"SimpleXMLElement",LIBXML_NOCDATA)),TRUE);
+$xml=json_decode(json_encode(simplexml_load_string(file_get_contents('/var/log/zwcfg_0xe9238f6e.xml'),"SimpleXMLElement",LIBXML_NOCDATA)),TRUE);
 foreach($xml['Node'] as $node){
 	foreach($node['CommandClasses']['CommandClass'] as $cmd){
 		if(isset($cmd['Value']['@attributes']['label'])){
@@ -33,3 +33,4 @@ foreach($xml['Node'] as $node){
 }
 unset($xml);
 $db->close();
+?>
