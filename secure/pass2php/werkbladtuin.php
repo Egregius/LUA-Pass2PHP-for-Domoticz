@@ -1,2 +1,5 @@
 <?php
-if(apcu_fetch('twerkblad')<time-5&&apcu_fetch('twerkblad2')<time-5)RefreshZwave(7);
+if($status=='Off'){
+	if(status('pirkeuken')!='Off')ud('pirkeuken',0,'Off');
+}
+if(timestamp('werkblad')<time-5&||timestamp('werkblad2')<time-5)RefreshZwave(7);

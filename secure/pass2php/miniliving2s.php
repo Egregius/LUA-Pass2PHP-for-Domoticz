@@ -1,6 +1,6 @@
 <?php
-$kodi=apcu_fetch('skodi');
-$keuken=apcu_fetch('skeuken');
+$kodi=status('kodi');
+$keuken=status('keuken');
 if($kodi=='On'){
 	$ctx=stream_context_create(array('http'=>array('timeout'=>2)));
 	file_get_contents('http://192.168.2.7:1597/jsonrpc?request={"jsonrpc":"2.0","id":1,"method":"Player.PlayPause","params":{"playerid":1}}',false,$ctx);
@@ -26,11 +26,12 @@ if($kodi=='On'){
 function andereuit(){
 	$items=array('pirkeuken','pirgarage','pirinkom','pirhall');
 	foreach($items as $item)
-		if(apcu_fetch('s'.$item)!='Off')
+		if(status(''.$item)!='Off')
 			ud($item,0,'Off');
 	$items=array('eettafel','zithoek','garage','inkom','hall','keuken','werkblad','wasbak','kookplaat');
 	foreach($items as $item)
-		if(apcu_fetch('s'.$item)!='Off')
+		if(status(''.$item)!='Off')
 			sw($item,'Off');
 }
-if($Weg!=0){apcu_store('Weg',0);apcu_store('tWeg',time);}
+if($Weg!=0)setstatus('Weg',0);
+?>

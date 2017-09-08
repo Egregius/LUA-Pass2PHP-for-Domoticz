@@ -1,9 +1,8 @@
 <?php
-for($k=1;$k<=200;$k++){
-	if(apcu_fetch('sdenon')!='On'){
-		sw('denon','On');
-		usleep(500000);
-	}else break;
+if(status('denon')!='On')sw('denon','On');
+if($zon<$zonmedia){
+	if(status('tvled')!='On')sw('tvled','On');
+	if(status('kristal')!='On')sw('kristal','On');
 }
 for($k=1;$k<=200;$k++){
 	$denon="";
@@ -29,24 +28,5 @@ for($k=1;$k<=200;$k++){
 		usleep(500000);
 	}else break;
 }
-for($k=1;$k<=200;$k++){
-	if(apcu_fetch('stv')!='On'){
-		sw('tv','On');
-		usleep(500000);
-	}else break;
-}
-if($zon<10){
-	for($k=1;$k<=200;$k++){
-		if(apcu_fetch('stvled')!='On'){
-			sw('tvled','On');
-			usleep(500000);
-		}else break;
-	}
-	for($k=1;$k<=200;$k++){
-		if(apcu_fetch('skristal')!='On'){
-			sw('kristal','On');
-			usleep(500000);
-		}else break;
-	}
-}
-if($Weg!=0){apcu_store('Weg',0);apcu_store('tWeg',time);}
+if(status('tv')!='On')sw('tv','On');
+if($Weg!=0){setstatus('Weg',0);}

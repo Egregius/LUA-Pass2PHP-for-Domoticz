@@ -1,2 +1,5 @@
 <?php
-if(apcu_fetch('twasbak')<time-5&&apcu_fetch('tkookplaat')<time-5)RefreshZwave(6);
+if($status=='Off'){
+	if(status('pirkeuken')!='Off')ud('pirkeuken',0,'Off');
+}
+if(timestamp('wasbak')<time-5||timestamp('kookplaat')<time-5)RefreshZwave(6);

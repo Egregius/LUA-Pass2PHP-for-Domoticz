@@ -1,11 +1,11 @@
 <?php
 if($status=='On'&&$auto){
-	if((time<strtotime('10:00')||time>strtotime('18:30')||$zon<800)&&apcu_fetch('sgarage')=='Off'){
+	if((time<strtotime('9:30')||time>strtotime('18:30')||$zon<$zongarage)&&status('garage')=='Off'){
 		sw('garage','On');
-		apcu_store('tgarage',time);
 	}
-	if($Weg>0&&$meldingen&&apcu_fetch('tWeg')<time-178){
+	if($Weg>0&&$meldingen&&timestamp('Weg')<time-178){
 		sw('sirene','On');
-		telegram('Beweging garage om '.strftime("%k:%M:%S",time),false,3);
+		shell_exec('/var/www/html/secure/ios.sh "Beweging Garage" > /dev/null 2>/dev/null &');
+		telegram('Beweging garage om '.strftime("%k:%M:%S",time),false,2);
 	}
 }

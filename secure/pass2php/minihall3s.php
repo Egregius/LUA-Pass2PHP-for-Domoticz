@@ -1,3 +1,4 @@
 <?php
-if($Weg!=0){apcu_store('Weg',0);apcu_store('tWeg',time);}
-if(apcu_fetch('shall')=='Off')sw('hall','On');
+if($Weg!=0)setstatus('Weg',0);
+if(status('hall')=='Off')sw('hall','On');
+if(status('sirene')!='Group Off')sw('sirene','Off');

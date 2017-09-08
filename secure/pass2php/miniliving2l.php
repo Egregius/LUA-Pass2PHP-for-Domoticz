@@ -1,10 +1,10 @@
 <?php
+shell_exec('/home/pi/wakenas.sh > /dev/null 2>/dev/null &');
 $ctx=stream_context_create(array('http'=>array('timeout'=>2)));
-for($k=1;$k<=200;$k++){
-	if(apcu_fetch('sdenon')!='On'){
-		sw('denon','On');
-		usleep(500000);
-	}else break;
+if(status('denon')!='On')sw('denon','On');
+if($zon<$zonmedia){
+	if(status('tvled')!='On')sw('tvled','On');
+	if(status('kristal')!='On')sw('kristal','On');
 }
 for($k=1;$k<=200;$k++){
 	$denon="";
@@ -30,30 +30,7 @@ for($k=1;$k<=200;$k++){
 		usleep(500000);
 	}else break;
 }
-for($k=1;$k<=200;$k++){
-	if(apcu_fetch('stv')!='On'){
-		sw('tv','On');
-		usleep(500000);
-	}else break;
-}
-if($zon<10){
-	for($k=1;$k<=200;$k++){
-		if(apcu_fetch('stvled')!='On'){
-			sw('tvled','On');
-			usleep(500000);
-		}else break;
-	}
-	for($k=1;$k<=200;$k++){
-		if(apcu_fetch('skristal')!='On'){
-			sw('kristal','On');
-			usleep(500000);
-		}else break;
-	}
-}
-for($k=1;$k<=200;$k++){
-	if(apcu_fetch('skodi')!='On'){
-		sw('kodi','On');
-		usleep(500000);
-	}else break;
-}
-if($Weg!=0){apcu_store('Weg',0);apcu_store('tWeg',time);}
+if(status('tv')!='On')sw('tv','On');
+if(status('kodi')!='On')sw('kodi','On');
+if($Weg!=0)setstatus('Weg',0);
+?>

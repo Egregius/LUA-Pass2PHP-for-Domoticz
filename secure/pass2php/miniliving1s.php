@@ -1,7 +1,7 @@
 <?php
 $ctx=stream_context_create(array('http'=>array('timeout'=>2)));
 for($k=1;$k<=200;$k++){
-	if(apcu_fetch('sdenon')!='On'){
+	if(status('denon')!='On'){
 		sw('denon','On');
 		usleep(500000);
 	}else break;
@@ -30,6 +30,7 @@ for($k=1;$k<=200;$k++){
 		usleep(500000);
 	}else break;
 }
-if(apcu_fetch('tv')!='Off')sw('tv','Off');
-if(apcu_fetch('tvled')!='Off')sw('tvled','Off');
-if($Weg!=0){apcu_store('Weg',0);apcu_store('tWeg',time);}
+if(status('tv')!='Off')sw('tv','Off');
+if(status('tvled')!='Off')sw('tvled','Off');
+if($Weg!=0){setstatus('Weg',0);;}
+?>

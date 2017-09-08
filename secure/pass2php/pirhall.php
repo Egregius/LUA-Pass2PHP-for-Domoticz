@@ -1,15 +1,14 @@
 <?php
 if($status=='On'&&$auto){
-	if($Weg==0&&apcu_fetch('shall')=='Off'&&(time<strtotime('8:00')||$zon<50)){
+	if($Weg==0&&status('hall')=='Off'&&(time<strtotime('7:00')||$zon<$zoninkom)){
 		sw('hall','On');
-		apcu_store('thall',time);
 	}
-	if(apcu_fetch('sinkom')=='Off'&&(time<strtotime('8:00')||$zon<50)){
+	if(status('inkom')=='Off'&&(time<strtotime('7:00')||$zon<$zoninkom)){
 		sw('inkom','On');
-		apcu_store('tinkom',time);
 	}
-	if($Weg==2&&$meldingen&&apcu_fetch('tWeg')<time-178){
+	if($Weg==2&&$meldingen&&timestamp('Weg')<time-178){
 		sw('sirene','On');
-		telegram('Beweging hall om '.strftime("%k:%M:%S",time),false,3);
+		shell_exec('/var/www/html/secure/ios.sh "Beweging Hall" > /dev/null 2>/dev/null &');
+		telegram('Beweging hall om '.strftime("%k:%M:%S",time),false,2);
 	}
 }

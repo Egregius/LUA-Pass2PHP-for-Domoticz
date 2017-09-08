@@ -1,10 +1,11 @@
 <?php
 if($status=="On"&&$auto){
-	if(apcu_fetch('skeuken')=='Off'&&apcu_fetch('swasbak')=='Off'&&apcu_fetch('swerkblad')=='Off'&&apcu_fetch('skookplaat')=='Off'&&$zon<100){
+	if(status('keuken')=='Off'&&status('wasbak')=='Off'&&status('werkblad')=='Off'&&status('kookplaat')=='Off'&&$zon<$zonkeuken){
 		sw('keuken','On');
 	}
-	if($Weg>0&&$meldingen&&apcu_fetch('tWeg')<time-178){
+	if($Weg>0&&$meldingen&&timestamp('Weg')<time-178){
 		sw('sirene','On');
-		telegram('Beweging keuken om '.strftime("%k:%M:%S",time),false,3);
+		shell_exec('/var/www/html/secure/ios.sh "Beweging Keuken" > /dev/null 2>/dev/null &');
+		telegram('Beweging keuken om '.strftime("%k:%M:%S",time),false,2);
 	}
 }

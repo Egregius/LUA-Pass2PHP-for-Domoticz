@@ -24,5 +24,5 @@ function denontcp($cmd,$x){
 	if($socket){fputs($socket, "$cmd\r\n");fclose($socket);usleep($sleep);return true;}
 	else{usleep($sleep);echo 'sleeping '.$sleep.'<br>';return false;}
 }
-
-if($Weg!=0){apcu_store('Weg',0);apcu_store('tWeg',time);}
+if($Weg!=0)setstatus('Weg',0);
+?>
