@@ -3,30 +3,30 @@
 DOMOTICZ=`curl -s --connect-timeout 2 --max-time 5 "http://127.0.0.1:8080/json.htm?type=devices&rid=1"`
 STATUS=`echo $DOMOTICZ | jq -r '.status'`
 if [ "$STATUS" == "OK" ] ; then
-	sleep 6.2
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
-	sleep 4.8
-	curl -s "http://127.0.0.1/secure/pass2php.php"
+	sleep 3.29
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
+	sleep 4.99
+	curl -s "http://127.0.0.1/secure/pass2php.php" > /dev/null 2>/dev/null &
 	exit
 else
 	sleep 10
