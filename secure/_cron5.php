@@ -23,7 +23,7 @@ if(!empty($smappee['report'])){
 			setstatus('consumption',$consumption);
 			$timestamp=strftime("%Y-%m-%d %H:%M:%S",time);
 			$query="INSERT INTO `smappee` (`timestamp`,`consumption`) VALUES ('$timestamp','$consumption');";
-			$db=new mysqli('secure.egregius.be','home','H0m€','domotica');if($db->connect_errno>0)die('Unable to connect to database [' . $db->connect_error . ']');if(!$result=$db->query($query))die('There was an error running the query ['.$query .' - ' . $db->error . ']');$db->close();
+			$db=new mysqli('server','user','password','database');if($db->connect_errno>0)die('Unable to connect to database [' . $db->connect_error . ']');if(!$result=$db->query($query))die('There was an error running the query ['.$query .' - ' . $db->error . ']');$db->close();
 			if($consumption>8000){
 				if(timestamp('notify_power')<time-3600){
 					settimestamp('notify_power',time);
