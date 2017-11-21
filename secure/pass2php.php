@@ -35,22 +35,22 @@ if($_SERVER['REQUEST_METHOD']=='POST'){
 			}else setstatus($device,$status);
 		}
 }
-if(timestamp('cron5')<time-4){
-	settimestamp('cron5');
-	if(timestamp('cron604800')<time-604790){
-		settimestamp('cron604800');
+if(apcu_fetch('cron5')<time()-4){
+	apcu_store('cron5',time());
+	if(apcu_fetch('cron604800')<time()-604790){
+		apcu_store('cron604800',time());
 		include('/var/www/html/secure/_cron604800.php');
 	}
-	if(timestamp('cron120')<time-118){
-		settimestamp('cron120');
+	if(apcu_fetch('cron120')<time()-118){
+		apcu_store('cron120'time());
 		include('/var/www/html/secure/_cron120.php');
-		if(timestamp('cron28800')<time-27790){
-			settimestamp('cron28800');
+		if(apcu_fetch('cron28800')<time()-27790){
+			apcu_store('cron28800',time());
 			include('/var/www/html/secure/_cron28800.php');
 		}
 	}
-	if(timestamp('cron60')<time-58){
-		settimestamp('cron60');
+	if(apcu_fetch('cron60')<time()-58){
+		apcu_store('cron60',time());
 		include('/var/www/html/secure/_cron60.php');
 	}
 	include('/var/www/html/secure/_cron5.php');
