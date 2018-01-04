@@ -4,6 +4,10 @@ if(isset($_POST['Remove'])){
 	if(isset($_POST['name'])){
 		apcu_delete($_POST['name']);
 	}
+}elseif(isset($_POST['Update'])){
+	if(isset($_POST['name'])){
+		apcu_store($_POST['name'],$_POST['Update']);
+	}
 }
 ?>
 <link rel="stylesheet" type="text/css" href="apcu.css">
@@ -47,7 +51,7 @@ td{padding:2px 10px;}
 </table>
 <pre>
 <?php //print_r($apcu);?>
-<div id="dataTables_wrapper" style="width:1200px;">
+<div id="dataTables_wrapper" style="width:1400px;">
 <table id="Table" class="pretty" BORDER="1" CELLPADDING="3" CELLSPACING="0">
 	<thead>
 		<tr>
@@ -55,7 +59,7 @@ td{padding:2px 10px;}
 			<th width="100px">Value</th>
 			<th width="15px">Hits</th>
 			<th width="35px">Created</th>
-			<th width="35px">Accessed</th>
+			<th width="45px">Update</th>
 			<th width="26px">Delete</th>
 		</tr>
 	</thead>
@@ -63,12 +67,18 @@ td{padding:2px 10px;}
 <?php
 
 foreach($apcu['cache_list'] as $c){
+		$value=apcu_fetch($c['info']);
 		echo '<tr>
 				<td>'.$c['info'].'</td>
-				<td style="word-wrap: break-word;">'.apcu_fetch($c['info']).'</td>
+				<td style="word-wrap: break-word;">'.$value.'</td>
 				<td align="right">'.$c['num_hits'].'</td>
 				<td align="center">'.strftime("%Y-%m-%d %H:%M:%S",$c['creation_time']).'</td>
-				<td align="center">'.strftime("%Y-%m-%d %H:%M:%S",$c['access_time']).'</td>
+				<td>
+					<form method="POST">
+						<input type="hidden" name="name" value="'.$c['info'].'"/>
+						<input type="text" name="Update" value="'.$value.'" onchange="submit.thisform()"/>
+					</form>
+				</td>
 				<td>
 					<form method="POST">
 						<input type="hidden" name="name" value="'.$c['info'].'"/>
