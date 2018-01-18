@@ -245,20 +245,7 @@ function koekje($user,$expirytime){
 }
 function telegram($msg,$silent=true,$to=1){
 	$msg=str_replace('__',PHP_EOL,$msg);
-	global $telegrambot,$telegramchatid,$telegramchatid2;
-	for($x=1;$x<=10;$x++){
-		$result=json_decode(file_get_contents('https://api.telegram.org/bot'.$telegrambot.'/sendMessage?chat_id='.$telegramchatid.'&text='.urlencode($msg).'&disable_notification='.$silent),true);
-		if(isset($result['ok']))
-			if($result['ok']===true){lg('telegram sent to 1: '.$msg);break;}
-			else {lg('telegram sent failed');sleep($x*3);}
-	}
-	if($to==2)
-		for($x=1;$x<=10;$x++){
-			$result=json_decode(file_get_contents('https://api.telegram.org/bot'.$telegrambot.'/sendMessage?chat_id='.$telegramchatid2.'&text='.$msg.'&disable_notification='.$silent),true);
-			if(isset($result['ok']))
-				if($result['ok']===true){lg('telegram sent to 2: '.$msg);break;}
-				else lg('telegram sent failed');sleep($x*3);
-		}
+	shell_exec('/var/www/html/secure/telegram.sh "'.$msg.'" "'.$silent.'" "'.$to.'" > /dev/null 2>/dev/null &');
 }
 function Luifel($name,$stat){
 	echo '
