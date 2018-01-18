@@ -1,0 +1,27 @@
+<?php
+$silent=true;$type='text';$to=NULL;
+if(isset($_REQUEST['silent']))$silent=$_REQUEST['silent'];
+if(isset($_REQUEST['text'])){$type='text';$content=str_replace('__',PHP_EOL,$_REQUEST['text']);}
+if(isset($_REQUEST['to']))$to=$_REQUEST['to'];
+if(!empty($argv[1])&&!empty($argv[2])){$type=$argv[1];$content=$argv[2];}
+
+if(isset($type)&&isset($content)){
+	$bot_url="https://api.telegram.org/bot123456789:ABCD-xCRhO-RBfUqICiJs8q9A_3YIr9irxI/";
+	$url=$bot_url."sendMessage?chat_id=12345678";$post_fields=array('chat_id'=>12345678,'text'=>$content,'disable_notification'=>$silent);
+	$ch=curl_init();curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type:multipart/form-data"));curl_setopt($ch,CURLOPT_URL,$url);curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);curl_setopt($ch,CURLOPT_POSTFIELDS,$post_fields);
+	for($x=1;$x<=100;$x++){
+		$result=json_decode(curl_exec($ch),true);
+		if($result['ok']===true)break;
+		sleep($x*2);
+	}
+	if($to=='2'){
+		$url=$bot_url."sendMessage?chat_id=87654321";$post_fields=array('chat_id'=>87654321,'text'=>$content,'disable_notification'=>$silent);
+		$ch=curl_init();curl_setopt($ch,CURLOPT_HTTPHEADER,array("Content-Type:multipart/form-data"));curl_setopt($ch,CURLOPT_URL,$url);curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);curl_setopt($ch,CURLOPT_POSTFIELDS,$post_fields);
+		for($x=1;$x<=100;$x++){
+			$result=json_decode(curl_exec($ch),true);
+			if($result['ok']===true)break;
+			sleep($x*2);
+		}
+	}
+}
+?>
