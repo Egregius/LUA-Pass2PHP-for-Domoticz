@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "abcd",
+  "private_key_id": "123456789",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nabcdefdgwggSkAgEAAoIBAQC4eEVid+NjP+WB\nI4O3yVvstskd01QYliqjTWSuWslt1IiJTfwgxlla7UghqY1vaadBORzZxKBQIF0j\nhMxzPITNv0k6/gwV/X5uetqy5BrH86EU/yA/D+u1n+VsqqkB7WmvEqGV/XzvWqmW\n7lBeoruwM9bUvM1GNRmzh4IGKocmg1EkCYAiLK710al6PPPodJNRcYzFtunhRmDy\n9dxnW5qW7wq19aF14meRND8MXEtWzUz7CjpSIZfyO3ZZqUOvr7WLVHkQsYoxRCDM\nWP9rFAai3nv3qi9AQNqkudFe0Xj5mBPZnG0FjmW+B/6ayXfcNmmG0niL+YuguFN1\nn2IfY/A/AgMBAAECggEAIoAT8fucInbT1JgwzVGyiI4TBSn+A28qYEpcNyOxooHq\nW0ujiPmvwoq4P9t3IUwwRMmKtMvKc9HpuXffyPmbmONardbPqdk0KTN+7ZAt1hGh\nocypWkH/AoP6I52zaDHf3ydr4yJ6mEVrjFfb3icvVSAM4NLCzYum1+XTEpYnmrMJ\nRXk8RungcVRCbbd/xbuO5D+wKS89i2snQPG782ciEw3uWnEZAXCcTNL/HsfWsj0J\nVt68xb1gLUzEC73Y74zHABEtDkuF9w5RJW6U3FbgOa5l+elbbmCOo2a1Nmj0pb8/\nG/jH6mJvlfydzesq/tNRsVl9McwsDgvGcbpkCxjE4QKBgQDheZd74d6H0R5qaFaf\nPl+5LTWVuWoLaQCO5/Ex5zyhhDvjCnMzH4WQy3NERKASjJmJSt8ZEmD20GnOTJNF\n5rI5biKt6LQM1H5IiznqCnnvhRH6g3aR0TM6dsJXSSjvd8ykiFodP2cNFJBxizR7\nSXcaqfrZfzvezbklyLL7IStFTwKBgQDRcYqQGdR7/7z2oz9A0Vx1DqWZFaDAwZFv\nSriJ5P+s+zlMIRFINYmvykJOmblka007uNr/Z1lplQGv5Mcx8zpLHmGeuMfpX3C6\n33wlQJwqx4bLl8N4g0rCPts0jXUClumjlzAPQO9vYIy2ginNJCYz4oT8HKX+USGL\n7HD4fuzKEQKBgQDZe50gQxeQTadW39ldtJ5EUVU0XCnrY5bEQPknN3IGITRapMPF\ndgwxQ+yk1sTH35JhGTTkTBP3PcQw1y/e5szWFGOi96hkD7rXYmO0WfKPk/1pc9C0\nieMt60s9QjYX9agQs+yn9XYC6ekBfFJc8NnPgFGT5OPs3uZNia8KCE5ihQKBgH/G\nUxBikb0sYe3d3gL/Nva6/tAL38x4yu8omLiXmlu/0E7fhZmV/+/c5uLo6a+XvsCG\noCRcurGtFCBo5BVXG+MkH84jUOLRNQbsvOJFLoDyxQuEBN6KypsCmdzPx+jShKsm\n200TAn/iWTYm5rWeLihNM3BTUfl7KYohrzIKzQ7hAoGBAK357vmICyG2IIg61vtU\nOWlD8Sf3p2qYv9J66bmM9bAWI+62w2dIbtNvXXMFmyzR6sfJXM63DaRa0/eZEwS2\nC+q0opf1EOQxFVookj88tCRWtshSjXQM7RJ5a9GqhsGvL7kt7E8dPUzEafAkRvVx\n1xt942o4QwGTzTIjnGG3siX9\n-----END PRIVATE KEY-----\n",
+  "client_email": "abcd@abcd.iam.gserviceaccount.com",
+  "client_id": "123456",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/homeegregius%40homeegregius.iam.gserviceaccount.com"
+}
