@@ -1,5 +1,5 @@
 <?php
-$items=array('GroheRed','garage','denon','bureel','tv','tvled','kristal','eettafel','zithoek','terras','tuin','voordeur','hall','inkom','keuken','werkblad','wasbak','kookplaat','sony','kamer','tobi','alex','lichtbadkamer','badkamervuur','zolderg','Xlight',
+$items=array('GroheRed','garage','denon','bureel','tv','tvled','kristal','eettafel','zithoek','terras','tuin','voordeur','hall','inkom','keuken','werkblad','wasbak','kookplaat','sony','kamer','tobi','alex','lichtbadkamer','badkamervuur','zolderg','Xlight','dampkap',
 			'pirgarage','pirkeuken','pirliving','pirinkom','pirhall',
 			'raamtobi','raamalex','raamkamer',
 			'buien','living_temp','badkamer_temp','kamer_temp','tobi_temp','alex_temp','zolder_temp',
@@ -20,7 +20,7 @@ $prevwind=apcu_fetch('wind');
 $prevbuien=apcu_fetch('buien');
 $wind=$prevwind;
 
-$wu=@json_decode(@file_get_contents('http://api.wunderground.com/api/c123456e123456e/conditions/q/BX/Beitem.json'),true);
+/*$wu=@json_decode(@file_get_contents('http://api.wunderground.com/api/1234567890/conditions/q/BX/Beitem.json'),true);
 if(isset($wu['current_observation'])){
 	$lastobservation=apcu_fetch('wu-observation');
 	if(isset($wu['current_observation']['estimated']['estimated']))goto exitwunderground;
@@ -28,17 +28,21 @@ if(isset($wu['current_observation'])){
 	if(isset($wu['current_observation']['temp_c'])){$wutemp=$wu['current_observation']['temp_c'];if($wutemp>$prevtemp+0.5)$wutemp=$prevtemp+0.5;elseif($wutemp<$prevtemp-0.5)$wutemp=$prevtemp-0.5;}
 	if(isset($wu['current_observation']['wind_kph']))$wuwind=$wu['current_observation']['wind_kph'];
 	if(isset($wu['current_observation']['wind_gust_kph']))if($wu['current_observation']['wind_gust_kph']>$wuwind)$wuwind=$wu['current_observation']['wind_gust_kph'];
-	if(isset($wu['current_observation']['precip_1hr_metric']))$wubuien=$wu['current_observation']['precip_1hr_metric']*35;
+	if(isset($wu['current_observation']['precip_1hr_metric']))$owbuien=$wu['current_observation']['precip_1hr_metric']*35;
 	if(isset($wu['current_observation']['wind_dir']))apcu_store('winddir',$wu['current_observation']['wind_dir']);
 	if(isset($wu['current_observation']['icon']))apcu_store('icon',$wu['current_observation']['icon']);
 	apcu_store('wu-observation',$wu['current_observation']['observation_epoch']);
 }
-exitwunderground:
+exitwunderground:*/
 $maxtemp=1;
 $maxrain=-1;
-$ds=@json_decode(@file_get_contents('https://api.darksky.net/forecast/1234567890afc86f329285203310/50.2020861,3.3064103?units=si'),true);
+$ds=@json_decode(@file_get_contents('https://api.darksky.net/forecast/123456789/50.2020861,3.2064103?units=si'),true);
 if(isset($ds['currently'])){
-	if(isset($ds['currently']['temperature'])){$dstemp=$ds['currently']['temperature'];if($dstemp>$prevtemp+0.5)$dstemp=$prevtemp+0.5;elseif($dstemp<$prevtemp-0.5)$dstemp=$prevtemp-0.5;}
+	if(isset($ds['currently']['temperature'])){
+		$dstemp=$ds['currently']['temperature'];
+		if($dstemp>$prevtemp+0.5)$dstemp=$prevtemp+0.5;
+		elseif($dstemp<$prevtemp-0.5)$dstemp=$prevtemp-0.5;
+	}
 	if(isset($ds['currently']['windSpeed'])){
 		$dswind=$ds['currently']['windSpeed'];
 	}
@@ -65,7 +69,17 @@ if(isset($ds['currently'])){
 		apcu_store('maxrain',$maxrain);
 	}
 }
-$rains=@file_get_contents('http://gadgets.buienradar.nl/data/raintext/?lat=50.20&lon=3.31');
+$ow=@json_decode(@file_get_contents('https://api.openweathermap.org/data/2.5/weather?id=2787889&units=metric&APPID=1234567890'),true);
+if(isset($ow['main']['temp'])){
+	$owtemp=$ow['main']['temp'];
+	if($owtemp>$prevtemp+0.5)$owtemp=$prevtemp+0.5;
+	elseif($owtemp<$prevtemp-0.5)$owtemp=$prevtemp-0.5;
+	$owwind=$ow['wind']['speed'];
+	apcu_store('humidity',$ow['main']['humidity']);
+	apcu_store('icon',$ow['weather'][0]['icon']);
+}
+
+$rains=@file_get_contents('http://gadgets.buienradar.nl/data/raintext/?lat=50.29&lon=3.21');
 if(!empty($rains)){
 	$rains=str_split($rains,11);$totalrain=0;$aantal=0;
 	foreach($rains as $rain){
@@ -93,17 +107,16 @@ if(!empty($rains)){
 
 	}
 }*/
-if(isset($prevtemp)&&isset($wutemp)&&isset($dstemp))apcu_store('buiten_temp',($prevtemp+$wutemp+$dstemp)/3);
-elseif(isset($prevtemp)&&isset($wutemp))apcu_store('buiten_temp',($prevtemp+$wutemp)/2);
+if(isset($prevtemp)&&isset($dstemp)&&isset($owtemp))apcu_store('buiten_temp',($prevtemp+$dstemp+$owtemp)/3);
 elseif(isset($prevtemp)&&isset($dstemp))apcu_store('buiten_temp',($prevtemp+$dstemp)/2);
-elseif(isset($wutemp)&&isset($dstemp))apcu_store('buiten_temp',($wutemp+$dstemp)/2);
-elseif(isset($wutemp))apcu_store('buiten_temp',$wutemp);
+elseif(isset($owtemp)&&isset($dstemp))apcu_store('buiten_temp',($owtemp+$dstemp)/2);
+elseif(isset($owtemp))apcu_store('buiten_temp',$owtemp);
 elseif(isset($dstemp))apcu_store('buiten_temp',$dstemp);
-if(isset($prevwind)&&isset($wuwind)&&isset($dswind))$wind=($prevwind+$wuwind+$dswind)/3;
-elseif(isset($prevwind)&&isset($wuwind))$wind=($prevwind+$wuwind)/2;
+if(isset($prevwind)&&isset($owwind)&&isset($dswind))$wind=($prevwind+$owwind+$dswind)/3;
+elseif(isset($prevwind)&&isset($owwind))$wind=($prevwind+$owwind)/2;
 elseif(isset($prevwind)&&isset($dswind))$wind=($prevwind+$dswind)/2;
-elseif(isset($wuwind)&&isset($dswind))$wind=($wuwind+$dswind)/2;
-elseif(isset($wuwind))$wind=$wuwind;
+elseif(isset($owwind)&&isset($dswind))$wind=($owwind+$dswind)/2;
+elseif(isset($owwind))$wind=$owwind;
 elseif(isset($dswind))$wind=$dswind;
 if($wind!=$prevwind)apcu_store('wind',$wind);
 $windhist=json_decode(apcu_fetch('windhist'));
@@ -112,35 +125,29 @@ $windhist=array_slice($windhist,-4);
 apcu_store('windhist',json_encode($windhist));
 $buiten_temp=apcu_fetch('buiten_temp');
 $msg='Buiten temperaturen : ';
-if(isset($wutemp))$msg.='Weatherunderground = '.$wutemp.'°C ';
 if(isset($dstemp))$msg.='Darksky = '.$dstemp.'°C ';
+if(isset($owtemp))$msg.='Openweathermap = '.$owtemp.'°C ';
 if(isset($buiten_temp))$msg.='buiten_temp = '.$buiten_temp.'°C';
 lg($msg);
-if(isset($prevbuien)&&isset($wubuien)&&isset($dsbuien)&&isset($newbuien))$buien=($prevbuien+$wubuien+$dsbuien+$newbuien)/4;
-elseif(isset($prevbuien)&&isset($wubuien)&&isset($dsbuien))$buien=($prevbuien+$wubuien+$dsbuien)/3;
-elseif(isset($prevbuien)&&isset($wubuien)&&isset($newbuien))$buien=($prevbuien+$wubuien+$newbuien)/3;
-elseif(isset($prevbuien)&&isset($dsbuien)&&isset($newbuien))$buien=($prevbuien+$dsbuien+$newbuien)/3;
+if(isset($prevbuien)&&isset($dsbuien)&&isset($newbuien))$buien=($prevbuien+$dsbuien+$newbuien)/3;
 elseif(isset($prevbuien)&&isset($newbuien))$buien=($prevbuien+$newbuien)/2;
-elseif(isset($prevbuien)&&isset($wubuien))$buien=($prevbuien+$wubuien)/2;
 elseif(isset($prevbuien)&&isset($dsbuien))$buien=($prevbuien+$dsbuien)/2;
 elseif(isset($newbuien))$buien=$newbuien;
-elseif(isset($wubuien))$buien=$wubuien;
 elseif(isset($dsbuien))$buien=$dsbuien;
 $buien=round($buien,0);
 if(isset($newbuien)&&$newbuien>100)$newbuien=100;
-if(isset($wubuien)&&$wubuien>100)$wubuien=100;
 if(isset($dsbuien)&&$dsbuien>100)$dsbuien=100;
 if(isset($buien)&&$buien>100)$buien=100;
 apcu_store('buien',$buien);
-if(!isset($wubuien))$wubuien=0;
+if(!isset($owbuien))$owbuien=0;
 if(!isset($dsbuien))$dsbuien=0;
 if(!isset($newbuien))$newbuien=0;
-$query="INSERT IGNORE INTO `regen` (`buienradar`,`wunderground`,`darksky`,`buien`) VALUES ('$newbuien','$wubuien','$dsbuien','$buien');";
+$query="INSERT IGNORE INTO `regen` (`buienradar`,`darksky`,`buien`) VALUES ('$newbuien','$dsbuien','$buien');";
 if(!$result=$db->query($query))die('There was an error running the query ['.$query .' - ' . $db->error . ']');
 $db->close();
 
 //UV
-$uv=json_decode(shell_exec("curl -X GET 'https://api.openuv.io/api/v1/uv?lat=50.89&lng=3.11' -H 'x-access-token: 12345678901234567890'"),true);
+$uv=json_decode(shell_exec("curl -X GET 'https://api.openuv.io/api/v1/uv?lat=50.89&lng=3.11' -H 'x-access-token: 3ede211d20c3fac5d9d1df3b5282ebf2'"),true);
 if(isset($uv['result'])){
 	apcu_store('uv',$uv['result']['uv']);
 	apcu_store('uv_max',$uv['result']['uv_max']);
@@ -150,14 +157,14 @@ if(strftime("%k")>2){
 	if(past('sunrise')>79200){
 		if(date('I',time())){apcu_store('DST',true);$DST=true;}
 		else{apcu_store('DST',false);$DST=false;}
-		$sunrise=json_decode(file_get_contents('http://api.sunrise-sunset.org/json?lat=50.2020861&lng=3.3064103&date=today&formatted=0'),true);
+		$sunrise=json_decode(file_get_contents('http://api.sunrise-sunset.org/json?lat=50.9020861&lng=3.1064103&date=today&formatted=0'),true);
 		if(isset($sunrise['results']['civil_twilight_begin'])){
 			$zonop=strtotime($sunrise['results']['civil_twilight_begin'])-($DST==true?3600:0);//Add -3600 during wintertime
 			$zononder=strtotime($sunrise['results']['civil_twilight_end'])-($DST==true?3600:0);//Add -3600 during wintertime
 			apcu_store('zonop',$zonop);
 			apcu_store('zononder',$zononder);
 			apcu_store('Tsunrise',time);
-			$words=array('Mercurius','Venus');
+			$words=array('Mercurius','Venus','Mars','Jupiter','Saturnus','Neptunus','Egregius','Minja','Alex','Tobi','Kirby','Guy','Beitem','Severinus');
 			shuffle($words);
 			apcu_store('Gast',$words[0]);
 		}
@@ -342,7 +349,6 @@ if(past('pirliving')>43190&&past('pirgarage')>43190&&past('pirinkom')>43190&&pas
 
 
 if(time<=strtotime('0:04')){
-	
 	apcu_store('gasvandaag',0);
 	apcu_store('watervandaag',0);
 }elseif(time>=strtotime('10:00')&&time<strtotime('10:05')){
@@ -483,7 +489,6 @@ if(!empty($objauth)){
 		apcu_store('zonvandaag',round($zonvandaag,1));
 		$gas=apcu_fetch('gasvandaag')/100;
 		$water=apcu_fetch('watervandaag')/1000;
-		@file_get_contents("https://verbruik.egregius.be/secure/insertdata.php?user=Guy&verbruik=$verbruikvandaag&gas=$gas&water=$water&zon=$zonvandaag");
 		lg("verbruik => gas = $gas | verbruik = $verbruikvandaag | zon = $zonvandaag | water = $water");
 	}
 	curl_close($chconsumption);
@@ -517,7 +522,7 @@ $sql = "select left(stamp,10) as stamp,min(buiten_min) as buiten_min,max(buiten_
 	if(!$result = $db->query($sql)) { die('There was an error running the query ['.$sql.' - '.$db->error.']');}
 	$values=array();
 	while ($row = $result->fetch_assoc()) $values[]=$row;$result->free();
-	$dbe=new mysqli('server','user','pass','database');
+	$dbe=new mysqli('server','user','password','database');
 	if($dbe->connect_errno>0){die('Unable to connect to database ['.$dbe->connect_error.']');}
 	foreach($values as $value) {
 		$stamp=$value['stamp'];
