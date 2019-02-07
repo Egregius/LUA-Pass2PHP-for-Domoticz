@@ -42,7 +42,7 @@ if(apcu_fetch('cron5')<time()-4){
 		include('/var/www/html/secure/_cron604800.php');
 	}
 	if(apcu_fetch('cron120')<time()-118){
-		apcu_store('cron120'time());
+		apcu_store('cron120',time());
 		include('/var/www/html/secure/_cron120.php');
 		if(apcu_fetch('cron28800')<time()-27790){
 			apcu_store('cron28800',time());
